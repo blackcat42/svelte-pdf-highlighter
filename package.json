@@ -1,6 +1,16 @@
 {
 	"name": "svelte-pdf-highlighter",
-	"version": "0.0.1",
+	"version": "0.1.0",
+	"description": "Svelte components for PDF highlighting",
+  	"author": "Sergey Gapchenko <gapchenko42@gmail.com>",
+  	"license": "MIT",
+  	"keywords": [
+	    "pdf",
+	    "highlight",
+	    "annotator",
+	    "svelte-component",
+	    "svelte"
+  	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run prepack",
