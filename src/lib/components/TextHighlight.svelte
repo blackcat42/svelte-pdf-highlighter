@@ -1,0 +1,120 @@
+<script lang="ts" module>
+    /**
+     * The props type for {@link TextHighlight}.
+     *
+     * @category Component Properties
+     */
+    export interface TextHighlightProps {
+        /**
+         * Highlight to render over text.
+         */
+        highlight: ViewportHighlight;
+
+        /**
+         * Callback triggered whenever the user clicks on the part of a highlight.
+         *
+         * @param event - Mouse event associated with click.
+         */
+        onClick?(event: MouseEvent): void;
+
+        /**
+         * Callback triggered whenever the user enters the area of a text highlight.
+         *
+         * @param event - Mouse event associated with movement.
+         */
+        onMouseOver?(event: MouseEvent): void;
+
+        /**
+         * Callback triggered whenever the user leaves  the area of a text highlight.
+         *
+         * @param event - Mouse event associated with movement.
+         */
+        onMouseOut?(event: MouseEvent): void;
+
+        /**
+         * Indicates whether the component is autoscrolled into view, affecting
+         * default theming.
+         */
+        isScrolledTo: boolean;
+
+        /**
+         * Callback triggered whenever the user tries to open context menu on highlight.
+         *
+         * @param event - Mouse event associated with click.
+         */
+        onContextMenu?(event: MouseEvent): void;
+
+        /**
+         * Optional CSS styling applied to each TextHighlight part.
+         */
+        style?: any;
+    }
+</script>
+
+<script lang="ts">
+    //import React, { CSSProperties, MouseEvent } from "react";
+
+    import type { ViewportHighlight } from '$lib/types.ts';
+    import { getContext } from 'svelte';
+
+    
+    /**
+     * A component for displaying a highlighted text area.
+     *
+     * @category Component
+     */
+    let {
+        highlight,
+        onClick,
+        isScrolledTo,
+        onContextMenu,
+        style,
+    }: TextHighlightProps = $props();
+    let highlightClass = $derived.by(() => (isScrolledTo ? 'TextHighlight--scrolledTo' : ''));
+    const { rects } = highlight.position;
+
+    const _color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+
+    //style={{ ...rect, ...style }}
+</script>
+
+<style>
+    .TextHighlight {
+      position: absolute;
+    }
+
+    .TextHighlight__parts {
+      opacity: 1;
+    }
+
+    .TextHighlight__part {
+      cursor: pointer;
+      position: absolute;
+      background: rgba(255, 226, 143, 1);
+      transition: background 0.3s;
+    }
+
+    .TextHighlight--scrolledTo .TextHighlight__part {
+      background: #ff4141;
+    }
+
+</style>
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+    class="TextHighlight {highlightClass}"
+    oncontextmenu={onContextMenu}
+>
+    <div class="TextHighlight__parts">
+        {#each rects as rect, index}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+                onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
+                onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}}
+                onclick={(e) => {e.preventDefault(); e.stopPropagation(); onClick(e)}}
+                style="width:{rect.width}px; height: {rect.height}px; left: {rect.left}px; top: {rect.top}px; background: {highlight.color ? highlight.color : _color}"
+                class="TextHighlight__part"
+            ></div>
+        {/each}
+    </div>
+</div>

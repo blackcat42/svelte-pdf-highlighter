@@ -1,6 +1,4 @@
-package.json
+# Package Managers
 package-lock.json
-dist
-dist-example
-node_modules
-build
+pnpm-lock.yaml
+yarn.lock
