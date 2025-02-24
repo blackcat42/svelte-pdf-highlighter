@@ -2,15 +2,15 @@
 	"name": "svelte-pdf-highlighter",
 	"version": "0.1.0",
 	"description": "Svelte components for PDF highlighting",
-  	"author": "Sergey Gapchenko <gapchenko42@gmail.com>",
-  	"license": "MIT",
-  	"keywords": [
-	    "pdf",
-	    "highlight",
-	    "annotator",
-	    "svelte-component",
-	    "svelte"
-  	],
+	"author": "Sergey Gapchenko <gapchenko42@gmail.com>",
+	"license": "MIT",
+	"keywords": [
+		"pdf",
+		"highlight",
+		"annotator",
+		"svelte-component",
+		"svelte"
+	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run prepack",
@@ -19,7 +19,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check ."
+		"lint": "prettier --check .",
+		"gh-pages": "npm run build && npx gh-pages -d build"
 	},
 	"files": [
 		"dist",
@@ -47,6 +48,7 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/package": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"gh-pages": "^6.3.0",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",
 		"publint": "^0.3.2",
