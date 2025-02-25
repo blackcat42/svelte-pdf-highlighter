@@ -32,7 +32,7 @@
     //};
 
     let colors = setContext('colors', ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe']);
-    let url: string | URL | DocumentInitParameters = $state("./2203.11115v1.pdf");
+    let url: string | URL | DocumentInitParameters = $state("https://arxiv.org/pdf/2203.11115");
     setContext('document', url);
     //document: string | URL | TypedArray | DocumentInitParameters;
 
@@ -59,9 +59,10 @@
     let selectedTool: tool = $state('text_selection');
 
     let workerUrl: string | null = $state(null);
-    (async () => {
-        workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; //vite.dev/guide/assets.html#explicit-url-imports
-    })();
+    // (async () => {
+    //     workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; //vite.dev/guide/assets.html#explicit-url-imports
+    // })();
+    workerUrl = "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs";
 
     onMount(() => {
         const handleClick = () => {
