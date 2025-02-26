@@ -57,7 +57,7 @@
         moving = true;
         //onEditStart();
         removeMouseUpListener = on(document, 'mouseup', onMouseUp);
-        removeMouseMoveListener = on(document,'mousemove', onMouseMove);
+        removeMouseMoveListener = on(document, 'mousemove', onMouseMove);
         //document.addEventListener('mouseup', onMouseUp);
         //document.addEventListener('mousemove', onMouseMove);
         bounds_rect = bounds.getBoundingClientRect();
@@ -65,9 +65,9 @@
 
     function resizer_onMouseDown(e, d) {
         //e.stopPropagation();
-        removeMouseUpListener = on(document,'mouseup', onMouseUp);
+        removeMouseUpListener = on(document, 'mouseup', onMouseUp);
         //document.addEventListener('mouseup', onMouseUp);
-        removeMouseMoveListener = on(document,'mousemove', onMouseMove);
+        removeMouseMoveListener = on(document, 'mousemove', onMouseMove);
         //document.addEventListener('mousemove', onMouseMove);
         resizing = true;
         resizing_direction = d;
@@ -159,7 +159,7 @@
         min-width: 10px;
     }
     .resizable {
-    /*  background-color: palegoldenrod;*/
+        /*  background-color: palegoldenrod;*/
         position: absolute;
     }
 

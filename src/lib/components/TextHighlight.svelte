@@ -80,24 +80,23 @@
 
 <style>
     .TextHighlight {
-      position: absolute;
+        position: absolute;
     }
 
     .TextHighlight__parts {
-      opacity: 1;
+        opacity: 1;
     }
 
     .TextHighlight__part {
-      cursor: pointer;
-      position: absolute;
-      background: rgba(255, 226, 143, 1);
-      transition: background 0.3s;
+        cursor: pointer;
+        position: absolute;
+        background: rgba(255, 226, 143, 1);
+        transition: background 0.3s;
     }
 
     .TextHighlight--scrolledTo .TextHighlight__part {
-      background: #ff4141;
+        background: #ff4141;
     }
-
 </style>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

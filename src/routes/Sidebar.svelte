@@ -1,4 +1,4 @@
-<script lang="ts" module> 
+<script lang="ts" module>
     export interface SidebarProps {
         highlights: Array<Highlight>;
         resetHighlights: () => void;
@@ -12,14 +12,13 @@
 </script>
 
 <script lang="ts">
-    import type { Highlight } from "$lib/types.ts";
+    import type { Highlight } from '$lib/types.ts';
     //import { Highlight } from "$lib/types.ts";
-    const APP_VERSION: string = "0.1.0";
+    const APP_VERSION: string = '0.1.0';
     const updateHash = (highlight: Highlight) => {
         //document.location.hash = `highlight-${highlight.id}`;
     };
 
-    
     let {
         highlights = $bindable(),
         toggleDocument,
@@ -31,20 +30,18 @@
         colors,
     }: SidebarProps = $props();
 
-
-    sidebarScrollToId((id)=>{
+    sidebarScrollToId((id) => {
         let element = document.getElementById(id);
         if (element) {
             element.scrollIntoView();
-            console.log('scroll')
+            console.log('scroll');
         }
-    })
+    });
 
-    $effect(() => {
-        
-    })
+    $effect(() => {});
     let selected_id_to_del = $state('');
 </script>
+
 <style>
     .sidebar {
         overflow: auto;
@@ -254,105 +251,99 @@
 <div class="sidebar" style="width: 25vw; maxWidth: 500px">
     <div class="description" style="padding: 1rem">
         <h2 style="marginBottom: 1rem">
-          svelte-pdf-highlighter {APP_VERSION}
+            svelte-pdf-highlighter {APP_VERSION}
         </h2>
         <p style="fontSize: 0.7rem">
-          <a href="https://github.com/blackcat42/svelte-pdf-highlighter">
-            Open in GitHub
-          </a>
+            <a href="https://github.com/blackcat42/svelte-pdf-highlighter">
+                Open in GitHub
+            </a>
         </p>
 
         <p>
-          <small>
-            To create an area highlight hold ⌥ Option key (Alt), then click and
-            drag.
-          </small>
+            <small>
+                To create an area highlight hold ⌥ Option key (Alt), then click and drag.
+            </small>
         </p>
     </div>
 
     {#if highlights}
-    <ul class="sidebar__highlights">
-      {#each highlights as highlight (highlight.id)}
-        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <li id={highlight.id} class="sidebar__highlight" >
-          <div style = "background: {highlight.color ? highlight.color : '#fcf151'};" class="sidebar__highlight-wrapper">
-            <div style = "background: transparent; width: 100%; height: 22px;">
-              {#if (selected_id_to_del == highlight.id)}
-              <div style="float:right;">
-                <span style="font-size: small;">delete this highlight?</span>
-              <!-- svelte-ignore a11y_consider_explicit_label -->
-              <button class="sidebar__delete-confirm" onclick="{()=>{deleteHighlight(highlight); selected_id_to_del = ''}}">&#x2713;</button>
-              <button class="sidebar__delete-cancel" onclick="{()=>{selected_id_to_del = ''}}">&#x2715;</button>
+        <ul class="sidebar__highlights">
+            {#each highlights as highlight (highlight.id)}
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <li id={highlight.id} class="sidebar__highlight" >
+                    <div style = "background: {highlight.color ? highlight.color : '#fcf151'};" class="sidebar__highlight-wrapper">
+                        <div style = "background: transparent; width: 100%; height: 22px;">
+                            {#if (selected_id_to_del == highlight.id)}
+                                <div style="float:right;">
+                                    <span style="font-size: small;">delete this highlight?</span>
+                                    <!-- svelte-ignore a11y_consider_explicit_label -->
+                                    <button class="sidebar__delete-confirm" onclick="{()=>{deleteHighlight(highlight); selected_id_to_del = ''}}">&#x2713;</button>
+                                    <button class="sidebar__delete-cancel" onclick="{()=>{selected_id_to_del = ''}}">&#x2715;</button>
+                                </div>
+                            {:else}
+                                <!-- svelte-ignore a11y_consider_explicit_label -->
+                                <button class="sidebar__delete" onclick="{()=>selected_id_to_del = highlight.id}"></button>
+                            {/if}
+                            <div class="sidebar__color_select">
+                                <select
+                                    value={highlight.color}
+                                    onchange={(e)=>editHighlight(highlight.id, {color: e.target.value})}
+                                    style="background: {highlight.color}"
+                                >
+                                    {#each colors as color}
+                                        <option 
+                                            value={color}
+                                            style ="background: {color}; height: 10px; width: 20px;"
+                                        >
+                                            &nbsp;
+                                        </option>
+                                    {/each}
+                                </select>
+                            </div>
+                        </div>
+                        <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: e.target.value})}></textarea></div>
+                        <div style = "background: #f8f9fa; border-top: 1px solid #ddd;">
+                            {#if highlight.content.text}
+                                <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}>
+                                        {highlight.content.text.slice(0, 90).trim()}…
+                                </blockquote>
+                            {/if}
 
-
-            </div>
-              {:else}
-              <!-- svelte-ignore a11y_consider_explicit_label -->
-              <button class="sidebar__delete" onclick="{()=>selected_id_to_del = highlight.id}"></button>
-              {/if}
-              <div class="sidebar__color_select">
-                <select
-                  value={highlight.color}
-                  onchange={(e)=>editHighlight(highlight.id, {color: e.target.value})}
-                  style="background: {highlight.color}"
-                >
-                  {#each colors as color}
-                    <option value={color}
-                      style ="background: {color}; height: 10px; width: 20px;">
-                         &nbsp;
-                    </option>
-                  {/each}
-                </select>
-              </div>
-              
-            </div>
-                <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: e.target.value})}></textarea></div>
-                <div style = "background: #f8f9fa; border-top: 1px solid #ddd;">
-                {#if highlight.content.text}
-                  <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}>
-                    {highlight.content.text.slice(0, 90).trim()}…
-                  </blockquote>
-                {/if}
-
-                {#if highlight.content.image}
-                  <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <div
-                    class="highlight__image__container"
-                    style="marginTop: 0.5rem"
-                    onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}
-                  >
-                    <img
-                      src={highlight.content.image}
-                      alt="Screenshot"
-                      class="highlight__image"
-                    />
-                  </div>
-                {/if}
-                <div class="highlight__location">
-                Page {highlight.position.boundingRect.pageNumber}
-              </div>
-            </div>
-              </div>
-              
-          </li>
-          {/each}
-      </ul>
-
+                            {#if highlight.content.image}
+                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                <div
+                                    class="highlight__image__container"
+                                    style="marginTop: 0.5rem"
+                                    onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}
+                                >
+                                    <img
+                                        src={highlight.content.image}
+                                        alt="Screenshot"
+                                        class="highlight__image" />
+                                </div>
+                            {/if}
+                            <div class="highlight__location">
+                                Page {highlight.position.boundingRect.pageNumber}
+                            </div>
+                        </div>
+                    </div>   
+                </li>
+            {/each}
+        </ul>
     {/if}
 
-      <div style={{ padding: "0.5rem" }}>
+    <div style={{ padding: "0.5rem" }}>
         <button onclick={()=>{}} class="sidebar__toggle">
-          Toggle PDF document
+            Toggle PDF document
         </button>
-      </div>
-
-      {#if highlights && highlights.length > 0}
-
-        <div style={{ padding: "0.5rem" }}>
-          <button onclick={resetHighlights} class="sidebar__reset">
-            Reset highlights
-          </button>
-        </div>
-        {/if}
     </div>
+
+    {#if highlights && highlights.length > 0}
+        <div style={{ padding: "0.5rem" }}>
+            <button onclick={resetHighlights} class="sidebar__reset">
+                Reset highlights
+            </button>
+        </div>
+    {/if}
+</div>

@@ -57,9 +57,7 @@
     } from '$lib/types.ts';
     import HighlightChildrenWrapper from '$lib/components/HighlightChildrenWrapper.svelte';
 
-
     //import { onDestroy, setContext, getAllContexts, getContext, onMount } from 'svelte';
-
 
     const EMPTY_ID = 'empty-id';
 

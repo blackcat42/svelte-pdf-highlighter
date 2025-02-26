@@ -13,20 +13,20 @@
  * @category Type
  */
 export type LTWH = {
-  /** The x coordinate of the top-left of the rectangle. */
-  left: number;
-  /** The y coordinate of the top-left of the rectangle. */
-  top: number;
-  /** Width of the rectangle, relative to top left of the viewport. */
-  width: number;
-  /** Height of the rectangle, relative to top left of the viewport. */
-  height: number;
+    /** The x coordinate of the top-left of the rectangle. */
+    left: number;
+    /** The y coordinate of the top-left of the rectangle. */
+    top: number;
+    /** Width of the rectangle, relative to top left of the viewport. */
+    width: number;
+    /** Height of the rectangle, relative to top left of the viewport. */
+    height: number;
 };
 
 /** @category Type */
 export type LTWHP = LTWH & {
-  /** 1-Indexed page number */
-  pageNumber: number;
+    /** 1-Indexed page number */
+    pageNumber: number;
 };
 
 /**
@@ -38,17 +38,17 @@ export type LTWHP = LTWH & {
  * @author Artem Tyurin <artem.tyurin@gmail.com>
  */
 export type Scaled = {
-  x1: number;
-  y1: number;
+    x1: number;
+    y1: number;
 
-  x2: number;
-  y2: number;
+    x2: number;
+    y2: number;
 
-  width: number;
-  height: number;
+    width: number;
+    height: number;
 
-  /** 1-Indexed page number */
-  pageNumber: number;
+    /** 1-Indexed page number */
+    pageNumber: number;
 };
 
 /**
@@ -57,10 +57,10 @@ export type Scaled = {
  * @category Type
  */
 export type ViewportPosition = {
-  /** Bounding rectangle for the entire highlight. */
-  boundingRect: LTWHP;
-  /** For text highlights, the rectangular highlights for each block of text. */
-  rects: Array<LTWHP>;
+    /** Bounding rectangle for the entire highlight. */
+    boundingRect: LTWHP;
+    /** For text highlights, the rectangular highlights for each block of text. */
+    rects: Array<LTWHP>;
 };
 
 /**
@@ -69,12 +69,12 @@ export type ViewportPosition = {
  * @category Type
  */
 export type ScaledPosition = {
-  /** Bounding rectangle for the entire highlight. */
-  boundingRect: Scaled;
-  /** For text highlights, the rectangular highlights for each block of text. */
-  rects: Array<Scaled>;
-  /** Rarely applicable property of whether coordinates should be in PDF coordinate space.  */
-  usePdfCoordinates?: boolean;
+    /** Bounding rectangle for the entire highlight. */
+    boundingRect: Scaled;
+    /** For text highlights, the rectangular highlights for each block of text. */
+    rects: Array<Scaled>;
+    /** Rarely applicable property of whether coordinates should be in PDF coordinate space.  */
+    usePdfCoordinates?: boolean;
 };
 
 /**
@@ -83,8 +83,8 @@ export type ScaledPosition = {
  * @category Type
  */
 export type Content = {
-  text?: string;
-  image?: string;
+    text?: string;
+    image?: string;
 };
 
 /**
@@ -93,7 +93,7 @@ export type Content = {
  *
  * @category Type
  */
-export type HighlightType = "text" | "area";
+export type HighlightType = 'text' | 'area';
 
 /**
  * This represents a selected (text/mouse) area that has been turned into a
@@ -102,22 +102,22 @@ export type HighlightType = "text" | "area";
  * @category Type
  */
 export interface Highlight {
-  id?: string;
-  /**
-   * This property is planned to be non-optional in future.
-   */
-  type?: HighlightType;
-  /**
-   * @deprecated If you want your highlight to store content after being a
-   * GhostHighlight, you should create your own interface extended off this. If
-   * you are currently using this property to determine what kind of highlight
-   * to render, please use {@link type}.
-   */
-  content?: Content;
-  position: ScaledPosition;
-  comment?: string;
-  is_temp?: boolean;
-  color?: string;
+    id?: string;
+    /**
+     * This property is planned to be non-optional in future.
+     */
+    type?: HighlightType;
+    /**
+     * @deprecated If you want your highlight to store content after being a
+     * GhostHighlight, you should create your own interface extended off this. If
+     * you are currently using this property to determine what kind of highlight
+     * to render, please use {@link type}.
+     */
+    content?: Content;
+    position: ScaledPosition;
+    comment?: string;
+    is_temp?: boolean;
+    color?: string;
 }
 
 /**
@@ -126,8 +126,8 @@ export interface Highlight {
  *
  * @category Type
  */
-export interface GhostHighlight extends Required<Omit<Highlight, "id">> {
-  content: Content;
+export interface GhostHighlight extends Required<Omit<Highlight, 'id'>> {
+    content: Content;
 }
 
 /**
@@ -136,11 +136,8 @@ export interface GhostHighlight extends Required<Omit<Highlight, "id">> {
  *
  * @category Type
  */
-export type ViewportHighlight<T extends Highlight = Highlight> = Omit<
-  T,
-  "position"
-> & {
-  position: ViewportPosition;
+export type ViewportHighlight<T extends Highlight = Highlight> = Omit<T, 'position'> & {
+    position: ViewportPosition;
 };
 
 /**
@@ -149,8 +146,8 @@ export type ViewportHighlight<T extends Highlight = Highlight> = Omit<
  * @category Type
  */
 export type PdfSelection = GhostHighlight & {
-  /** Convert the current selection into a temporary highlight */
-  makeGhostHighlight(): GhostHighlight;
+    /** Convert the current selection into a temporary highlight */
+    makeGhostHighlight(): GhostHighlight;
 };
 
 /**
@@ -159,9 +156,9 @@ export type PdfSelection = GhostHighlight & {
  * @category Type
  */
 export type Page = {
-  node: HTMLElement;
-  /** 1-Index page number */
-  number: number;
+    node: HTMLElement;
+    /** 1-Index page number */
+    number: number;
 };
 
 /**
@@ -170,9 +167,9 @@ export type Page = {
  * @category Type
  */
 export type HighlightBindings = {
-  reactRoot: any;
-  container: Element;
-  textLayer: HTMLElement;
+    reactRoot: any;
+    container: Element;
+    textLayer: HTMLElement;
 };
 
 /**
@@ -181,8 +178,8 @@ export type HighlightBindings = {
  * @category Type
  */
 export type Tip = {
-  position: ViewportPosition;
-  content: any;
+    position: ViewportPosition;
+    content: any;
 };
 
 /**
@@ -192,23 +189,23 @@ export type Tip = {
  * @category Type
  */
 export type PdfScaleValue =
-  | "page-actual"
-  | "page-width"
-  | "page-height"
-  | "page-fit"
-  | "auto"
-  | number;
-  
+    | 'page-actual'
+    | 'page-width'
+    | 'page-height'
+    | 'page-fit'
+    | 'auto'
+    | number;
+
 export interface CommentedHighlight extends Highlight {
-  content: Content;
-  comment?: string;
+    content: Content;
+    comment?: string;
 }
 
 export type SearchOptions = {
-        type: 'again';
-        query: string;
-        caseSensitive?: boolean;
-        entireWord?: boolean;
-        highlightAll?: boolean;
-        findPrevious?: boolean
-    }
+    type: 'again';
+    query: string;
+    caseSensitive?: boolean;
+    entireWord?: boolean;
+    highlightAll?: boolean;
+    findPrevious?: boolean;
+};

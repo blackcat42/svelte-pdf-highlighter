@@ -42,10 +42,10 @@
         style?: any;
     }
 </script>
+
 <script lang="ts">
     //TODO: custom styling
 
-    
     //import { getPageFromElement } from '$lib/pdf_utils/pdfjs-dom.ts';
     import RND from '$lib/components/RND.svelte';
     import type { LTWHP, ViewportHighlight } from '$lib/types.ts';
@@ -102,7 +102,7 @@
                 width: data.width,
                 height: data.height,
                 //pageNumber: getPageFromElement(ref)?.number || -1,
-              };
+            };
 
               onChange && onChange(boundingRect);
               //tipContainerState.tip.position = {boundingRect};

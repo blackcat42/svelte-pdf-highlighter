@@ -18,17 +18,18 @@
         setTip: (callback: any) => void;
     }
 
-    let { editHighlight, onContextMenu, onClick, setTip, pdfHighlighterUtils }: HighlightContainerProps = $props();
+    let {
+        editHighlight,
+        onContextMenu,
+        onClick,
+        setTip,
+        pdfHighlighterUtils,
+    }: HighlightContainerProps = $props();
     let contexts = getAllContexts();
 
     //context set in HighLightLayer
-    let { highlight, 
-          viewportToScaled, 
-          screenshot, 
-          isScrolledTo, 
-          highlightBindings,
-        }: any = getContext('highlightUtils'); //HighlightContext
-
+    let { highlight, viewportToScaled, screenshot, isScrolledTo, highlightBindings }: any =
+        getContext('highlightUtils'); //HighlightContext
 
     const { toggleEditInProgress } = pdfHighlighterUtils.utils; //usePdfHighlighterContext();
     let highlightTip: Tip = $state({
@@ -36,52 +37,48 @@
         content: { highlight },
     });
     //onMount(() => {
-        //console.log('H.container mount');
-        //return console.log('H.container unmount');
+    //console.log('H.container mount');
+    //return console.log('H.container unmount');
     //});
 </script>
 
-
-
 <MonitoredHighlightContainer highlightTip={highlightTip} {setTip}> 
-
     {#if highlight.type === "text"}
-    <TextHighlight
-      isScrolledTo={isScrolledTo}
-      highlight={highlight}
-      onContextMenu={(event) =>
-        onContextMenu && onContextMenu(event, highlight)
-      }
-      onClick = {(event) => {
-        onClick && onClick(event, highlight)
-      }
-      }
-    />
+        <TextHighlight
+            isScrolledTo={isScrolledTo}
+            highlight={highlight}
+            onContextMenu={(event) =>
+                onContextMenu && onContextMenu(event, highlight)
+            }
+            onClick = {(event) => {
+                    onClick && onClick(event, highlight)
+                }
+            }
+        />
     {:else}
-    <AreaHighlight
-      isScrolledTo={isScrolledTo}
-      highlight={highlight}
-      onChange={(boundingRect) => {
-        const edit = {
-          position: {
-            boundingRect: viewportToScaled(boundingRect),
-            rects: [],
-          },
-          content: {
-            image: screenshot(boundingRect),
-          },
-        };
-        editHighlight(highlight.id, edit);
-        toggleEditInProgress(false);
-      }}
-      bounds={highlightBindings.textLayer}
-      onContextMenu={(event) =>
-        onContextMenu && onContextMenu(event, highlight)
-      }
-      onClick = {(event) =>
-        onClick && onClick(event, highlight)
-      }
-    />
+        <AreaHighlight
+            isScrolledTo={isScrolledTo}
+            highlight={highlight}
+            onChange={(boundingRect) => {
+                const edit = {
+                    position: {
+                        boundingRect: viewportToScaled(boundingRect),
+                        rects: [],
+                    },
+                    content: {
+                        image: screenshot(boundingRect),
+                    },
+                };
+                editHighlight(highlight.id, edit);
+                toggleEditInProgress(false);
+            }}
+            bounds={highlightBindings.textLayer}
+            onContextMenu={(event) =>
+                onContextMenu && onContextMenu(event, highlight)
+            }
+            onClick = {(event) =>
+                onClick && onClick(event, highlight)
+            }
+        />
     {/if}
-    
-  </MonitoredHighlightContainer>
+</MonitoredHighlightContainer>
