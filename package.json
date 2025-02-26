@@ -1,6 +1,6 @@
 {
 	"name": "svelte-pdf-highlighter",
-	"version": "0.1.0",
+	"version": "0.1.0-alpha.0",
 	"description": "Svelte components for PDF highlighting",
 	"author": "Sergey Gapchenko <gapchenko42@gmail.com>",
 	"license": "MIT",
@@ -25,7 +25,9 @@
 	"files": [
 		"dist",
 		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
+		"!dist/**/*.spec.*",
+		"README.md",
+	    "LICENSE"
 	],
 	"sideEffects": [
 		"**/*.css"
@@ -59,5 +61,10 @@
 	},
 	"dependencies": {
 		"pdfjs-dist": "4.4.168"
-	}
+	},
+	"repository": {
+	    "type": "git",
+	    "url": "git+https://github.com/blackcat42/svelte-pdf-highlighter.git"
+  	},
+  	"homepage": "https://github.com/blackcat42/svelte-pdf-highlighter#readme"
 }
