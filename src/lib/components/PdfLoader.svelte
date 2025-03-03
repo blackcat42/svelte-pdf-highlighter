@@ -18,7 +18,7 @@
          * @param progress - PDF.js progress status.
          * @returns - Component to be rendered in space of the PDF document while loading.
          */
-        //beforeLoad?(progress: OnProgressParameters): ReactNode;
+        beforeLoad?: Snippet<[OnProgressParameters]>;
 
         /**
          * Component to render in the case of any PDF loading errors.
@@ -26,7 +26,7 @@
          * @param error - PDF loading error.
          * @returns - Component to be rendered in space of the PDF document.
          */
-        //errorMessage?(error: Error): ReactNode;
+        errorMessage?: Snippet<[Error]>;
 
         /**
          * Child components to use/render the loaded PDF document.
@@ -34,7 +34,7 @@
          * @param pdfDocument - The loaded PDF document.
          * @returns - Component to render once PDF document is loaded.
          */
-        pdfHighlighterWrapper(pdfDocument: PDFDocumentProxy): any;
+        pdfHighlighterWrapper: Snippet<[PDFDocumentProxy]>;
 
         /**
          * Callback triggered whenever an error occurs.
@@ -58,15 +58,10 @@
         DocumentInitParameters,
         TypedArray,
         PDFDocumentProxy,
+        OnProgressParameters,
     } from 'pdfjs-dist/types/src/display/api.ts';
+    import type { Snippet } from 'svelte';
 
-    //const DEFAULT_BEFORE_LOAD = (progress: OnProgressParameters) => (
-    //
-    //);
-
-    //const DEFAULT_ERROR_MESSAGE = (error: Error) => (
-    //
-    //);
     import { setContext, getContext, onMount } from 'svelte';
 
     const DEFAULT_ON_ERROR = (error: Error) => {
@@ -74,7 +69,6 @@
     };
 
     const DEFAULT_WORKER_SRC = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
-    //await import("$lib/pdf_highlighter/pdf.worker.min.mjs");
 
     /**
      * A component for loading a PDF document and passing it to a child.
@@ -83,8 +77,8 @@
      */
     let {
         document,
-        //beforeLoad = DEFAULT_BEFORE_LOAD,
-        //errorMessage = DEFAULT_ERROR_MESSAGE,
+        beforeLoad,
+        errorMessage,
         pdfHighlighterWrapper,
         onError = DEFAULT_ON_ERROR,
         workerSrc = DEFAULT_WORKER_SRC,
@@ -96,7 +90,6 @@
     let loadingProgress: any = $state(null);
 
     // Intitialise document
-    //const document = getContext('document');
 
     onMount(() => {
         GlobalWorkerOptions.workerSrc = workerSrc;
@@ -129,18 +122,33 @@
             }
         };
     });
-    //, [document]
 
-    //const HighlightContext = createContext<HighlightContainerUtils | undefined>(undefined);
-    setContext('HighlightContext', undefined);
+    //setContext('HighlightContext', undefined);
 </script>
 
+<style>
+    .pdf-loader__loading-progress {
+        color: black;
+    }
+    .pdf-loader__loading-progress--error {
+        color: red;
+    }
+</style>
+
 {#if error}
-    <div style="color: black">{error.message}</div>
+    {#if errorMessage}
+        {@render errorMessage(error)}
+    {:else}
+        <div class="pdf-loader__loading-progress--error">{error.message}</div>
+    {/if}
 {:else if loadingProgress}
-    <div style="color: black">
-        Loading {Math.floor((loadingProgress.loaded / loadingProgress.total) * 100)}%
-    </div>
+    {#if beforeLoad}
+        {@render beforeLoad(loadingProgress)}
+    {:else}
+        <div class="pdf-loader__loading-progress">
+            Loading {Math.floor((loadingProgress.loaded / loadingProgress.total) * 100)}%
+        </div>
+    {/if}
 {:else if pdfDocumentRef}
     {@render pdfHighlighterWrapper(pdfDocumentRef)}
 {/if}

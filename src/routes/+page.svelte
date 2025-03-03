@@ -58,10 +58,10 @@
     let selectedTool: tool = $state('text_selection');
 
     let workerUrl: string | null = $state(null);
-    // (async () => {
-    //     workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; //vite.dev/guide/assets.html#explicit-url-imports
-    // })();
-    workerUrl = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+     (async () => {
+         workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; //vite.dev/guide/assets.html#explicit-url-imports
+     })();
+    //workerUrl = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
 
     onMount(() => {
         const handleClick = () => {
@@ -151,7 +151,7 @@
     // }
 
     let resetHash = '';
-    console.log(url);
+    //console.log(url);
 </script>
 
 <style>
@@ -185,8 +185,20 @@
 
     {#if workerUrl !== null}         
     <PdfLoader document={url} workerSrc={workerUrl}>
+
+        <!-- Custom error and progress snippets (optional) -->
+        <!--
+        {#snippet errorMessage(error)}
+            {error}
+        {/snippet}
+        -->
+        <!--
+        {#snippet beforeLoad(loadingProgress)}
+            {Math.floor((loadingProgress.loaded / loadingProgress.total) * 100)}%
+        {/snippet}
+        -->
+
         {#snippet pdfHighlighterWrapper(pdfDocumentRef)}
-        <!-- {pdfDocumentRef?._pdfInfo?.numPages} -->
             <PdfHighlighter
                 bind:highlightsStore
                 bind:selectedTool 
