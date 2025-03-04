@@ -28,7 +28,7 @@
          */
         children: any;
 
-        setTip: any;
+        pdfHighlighterUtils: any;
     }
 </script>
 
@@ -49,7 +49,7 @@
         highlightTip,
         onMouseLeave,
         children,
-        setTip,
+        pdfHighlighterUtils,
     }: MonitoredHighlightContainerProps = $props();
     let mouseInRef = $state(false); // Whether the mouse is over the child (highlight)
 
@@ -67,7 +67,7 @@
         //if (isEditingOrHighlighting()) return;
         if (highlightTip) {
             // MouseMonitor the highlightTip to prevent it from disappearing if the mouse is over it and not the highlight.
-            setTip({
+            pdfHighlighterUtils.utils.setTip({
                 show: true,
                 tip: highlightTip,
                 tip_id: highlightTip.content.id,
@@ -77,7 +77,7 @@
     onmouseleave={() => {
         //if (tipContainerState && !(tipContainerState.mouseInRef)) {
         if (true) {
-            setTip({
+            pdfHighlighterUtils.utils.setTip({
                 show: false,
             });
         }

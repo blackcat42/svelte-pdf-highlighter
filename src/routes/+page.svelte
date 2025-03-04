@@ -120,21 +120,8 @@
 
     let sidebarScrollToId: (id: string) => void;
 
-    let setTip = $state(() => {});
+    let pdfHighlighterUtils = $state({ utils: null });
 
-    let searchInPdf = $state({ search: null });
-    const onSearch = (callback) => {
-        searchInPdf.search = callback;
-    };
-
-    const resetHighlights = () => {
-        highlightsStore.highlights = [];
-    };
-
-    let pdfHighlighterUtils = $state.raw({ utils: null });
-    const setPdfHighlighterUtils = (obj) => {
-        pdfHighlighterUtils = obj;
-    };
 
     // Scroll to highlight based on hash in the URL
     /*const scrollToHighlightFromHash = () => {
@@ -164,10 +151,12 @@
     }
 </style>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="App" style="display: flex; height: 100vh;">
     <Sidebar
         bind:highlights={highlightsStore.highlights}
-        resetHighlights={resetHighlights}
+        resetHighlights={highlightsStore.resetHighlights}
         toggleDocument={()=>{}}
         editHighlight = {highlightsStore.editHighlight}
         deleteHighlight = {highlightsStore.deleteHighlight}
@@ -179,7 +168,7 @@
         <Toolbar setPdfScaleValue = {setPdfScaleValue}
              pdfScaleValue = {pdfScaleValue}
              bind:selectedTool = {selectedTool}
-             searchInPdf = {searchInPdf} />
+             searchInPdf = {pdfHighlighterUtils.utils?.search} />
 
         {#if workerUrl !== null}         
             <PdfLoader document={url} workerSrc={workerUrl}>
@@ -205,13 +194,11 @@
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
                         {pdfScaleValue}
                         {setPdfScaleValue}
-                        onTipUpdate={(tipUpdater) => setTip = tipUpdater}
-                        {setTip}
-                        {onSearch}
-                        {setPdfHighlighterUtils}
+                        onSearch = {(callback) => pdfHighlighterUtils.utils.search = callback}
+                        bind:pdfHighlighterUtils = {pdfHighlighterUtils}
                     >
                         <HighlightContainer
-                            {setTip}
+                            
                             editHighlight = {highlightsStore.editHighlight}
                             onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
                             onClick = {(e, data) => {
@@ -220,7 +207,82 @@
                                 //setTip({highlight: data, show: true, position: data.position}, true, true);
                             }}
                             {pdfHighlighterUtils}
-                        /> 
+                        />
+
+                        <!-- Custom popup snippets (optional) -->
+                        <!--
+                        {#snippet highlightPopup(highlight, setPinned)}
+                            <div class="Highlight__popup">
+                                {#if highlight.comment }
+                                    <div style="margin: 5px;" onclick={()=>setPinned(true)}> 
+                                        {#if highlight.comment.length > 20 }
+                                            <span style="mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0));">
+                                            {highlight.comment.slice(0, 21) + '...'}</span> (click to expand)
+                                        {:else}
+                                            {highlight.comment}
+                                        {/if}        
+                                        <span style="font-size: 0.8em;">(click to edit)</span>
+                                    </div>
+                                {:else}
+                                    <div style="margin: 5px;" onclick={()=>setPinned(true)}>Comment has no Text  <span style="font-size: 0.8em;">(click to edit)</span></div>
+                                {/if}
+                            </div>
+                        {/snippet}
+                        -->
+
+                        <!--
+                        {#snippet editHighlightPopup(highlight, colors, onEdit, onDelete)}
+                            <div class="Highlight__popup">
+                                <textarea 
+                                    onchange={(e) => onEdit((e.target as HTMLInputElement).value)}
+                                    value={highlight.comment ? highlight.comment : ''}
+                                ></textarea>
+                                <hr>
+                                {#each colors as color}
+                                    <button 
+                                        class="color" 
+                                        onclick={()=>setColor(color)} 
+                                        style="background-color: {color}" 
+                                        onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
+                                        onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}} >  
+                                    </button>
+                                    {/each}
+                                <button onclick={() => onDelete(highlight)}>delete</button>
+                            </div>
+                        {/snippet}
+                        -->
+
+                        <!--
+                        {#snippet newHighlightPopup(highlight, colors, onAddHighlight)}
+                            <div class="Highlight__popup">
+                                {#each colors as color}
+                                    <button 
+                                        class="color"  
+                                        onclick={
+                                            (e) => {
+                                                if (!highlight.id) {
+                                                    highlight.color = color;
+                                                    onAddHighlight(highlight);
+                                                }
+                                            }
+                                        }
+                                        style="background-color: {color}"
+                                        onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
+                                        onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}}
+                                    ></button>
+                                {/each}
+
+                                <button 
+                                    onclick={(e)=>{
+                                        navigator.clipboard.writeText(tipContainerState.highlight.content.text);
+                                        clearTextSelection();
+                                        hideTip(e, true);
+                                    }}
+                                >copy</button>
+                            </div>
+                        {/snippet}
+                        -->
+
                     </PdfHighlighter>
                 {/snippet}
             </PdfLoader>

@@ -51,7 +51,7 @@
 
     const search = (opts) => {
         searchOptions = { ...searchOptions, ...opts };
-        searchInPdf.search(searchOptions);
+        searchInPdf(searchOptions);
     };
 
     //${isHighlightPen ? 'active' : ''}` add to button class

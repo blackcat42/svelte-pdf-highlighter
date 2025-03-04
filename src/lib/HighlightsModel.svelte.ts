@@ -39,7 +39,7 @@ export class HighlightsModel {
         return () => this.listeners.delete(callback);
     };
 
-    public addHighlight = (highlight: Highlight, comment: string) => {
+    public addHighlight = (highlight: Highlight) => {
         console.log('Saving highlight', highlight);
         let id = this.getNextId();
         this.highlights.push({ ...highlight, id: id });
@@ -64,6 +64,10 @@ export class HighlightsModel {
             }
             return item.id !== highlight.id;
         });
+    };
+
+    public resetHighlights = () => {
+        this.highlights = [];
     };
 
     public addGhostHighlight = (hl: Highlight) => {

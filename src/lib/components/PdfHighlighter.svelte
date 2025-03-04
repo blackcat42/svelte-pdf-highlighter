@@ -17,12 +17,15 @@
         selectedTool: string;
         pdfDocument: PDFDocumentProxy;
         children: Snippet;
+        highlightPopup?: Snippet;
+        editHighlightPopup?: Snippet;
+        newHighlightPopup?: Snippet;
         style: string;
         onContextMenu: (e: MouseEvent) => void;
-        onTipUpdate(callback: (...args: any[]) => void): void;
-        setTip(callback: (...args: any[]) => void): void;
+        //onTipUpdate(callback: (...args: any[]) => void): void;
         onSearch(callback: (options: SearchOptions) => void): void;
-        setPdfHighlighterUtils(...args: any[]): void;
+        //setPdfHighlighterUtils(...args: any[]): void;
+        pdfHighlighterUtils;
     }
 </script>
 
@@ -98,20 +101,20 @@
         selectedTool = $bindable('text_selection'),
         pdfDocument,
         children,
+        highlightPopup,
+        editHighlightPopup,
+        newHighlightPopup,
         //textSelectionColor = DEFAULT_TEXT_SELECTION_COLOR,
         style,
         onContextMenu,
-        onTipUpdate,
-        setTip,
         onSearch,
-        setPdfHighlighterUtils,
+        //setPdfHighlighterUtils,
+        pdfHighlighterUtils = $bindable(),
     }: pdfHighlighterProps = $props();
 
     let enableAreaSelection: (e: MouseEvent) => boolean = (event) =>
         event.altKey || selectedTool === 'area_selection';
 
-    let addHighlight = highlightsStore.addHighlight;
-    let editHighlight = highlightsStore.editHighlight;
     //let addGhostHighlight = highlightsStore.addGhostHighlight;
     //let removeGhostHighlights = highlightsStore.removeGhostHighlights;
 
@@ -327,17 +330,17 @@
             tipContainerState.pinned = true;
             tipContainerState.position = viewportPosition;
             tipContainerState.highlight = selectionRef;
-            tipContainerState.addHighlight = addHighlight;
+            tipContainerState.addHighlight = highlightsStore.addHighlight;
             tipContainerState.clearSelection = () => {
                 //extTipContainerState.show = false;
                 tipContainerState.highlight = null;
                 clearTextSelection();
             };
 
-            setTip(tipContainerState);
+            pdfHighlighterUtils.utils.setTip(tipContainerState);
             //addGhostHighlight(selectionRef);
         } else {
-            addHighlight(selectionRef, '');
+            highlightsStore.addHighlight(selectionRef, '');
             clearTextSelection();
         }
     };
@@ -510,8 +513,7 @@
         }, 100);
     };
 
-    setPdfHighlighterUtils({
-        utils: {
+    pdfHighlighterUtils.utils = {
             isEditingOrHighlighting,
             getCurrentSelection: () => selectionRef,
             toggleEditInProgress,
@@ -522,8 +524,8 @@
             scrollToHighlight,
             getViewer: () => viewerRef,
             getTip: () => tip,
-        },
-    });
+        };
+
     let enableTextSelection = $state(true);
     const setPdfTextSelection = (value) => {
         enableTextSelection = value;
@@ -658,14 +660,13 @@
     {#if isViewerReady}
         <TipContainer 
             {clearTextSelection} 
-            {onTipUpdate} 
-            viewer={viewerRef!} 
-            addHighlight={addHighlight ? addHighlight : null} 
-            onEdit={(id)=> {gotoSidebarRef ? gotoSidebarRef(id) : null}} 
-            onChangeColor={setHLColor} 
+            onTipUpdate = {(tipUpdater) => pdfHighlighterUtils.utils.setTip = tipUpdater} 
+            viewer={viewerRef!}
             colors={colors} 
-            {editHighlight} 
-            onDelete={highlightsStore.deleteHighlight}
+            {highlightsStore}
+            {highlightPopup}
+            {editHighlightPopup}
+            {newHighlightPopup}
         />
     {/if}
 
@@ -689,7 +690,7 @@
                     type: "area",
                     position: scaledPosition,
                     };
-                addHighlight(selectionRef, '');
+                highlightsStore.addHighlight(selectionRef, '');
                 //onAreaSelectionFin();
                 clearTextSelection();
                 }

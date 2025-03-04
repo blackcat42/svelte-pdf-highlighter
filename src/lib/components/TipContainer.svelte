@@ -1,34 +1,38 @@
 <script module lang="ts">
+    import type { Snippet } from 'svelte';
+    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
+    import type { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
+
+    import type {
+        Highlight,
+    } from '$lib/types';
+
     export interface TipContainerProps {
         viewer: PDFViewer;
-        addHighlight: any;
-        editHighlight: any;
-        onEdit: any;
-        onDelete?: any;
-        onChangeColor: any;
+        highlightsStore: HighlightsModel;
         onTipUpdate: any;
-        colors: any;
-        clearTextSelection: any;
+        colors: [string];
+        clearTextSelection: () => void;
+
+        highlightPopup?: Snippet<[highlight: Highlight, setPinned: (flag: boolean) => void]>;
+        editHighlightPopup?: Snippet<[highlight: Highlight, colors: [string], onEdit: (comment: string) => void, onDelete: (highlight: Highlight) => void]>;
+        newHighlightPopup?: Snippet<[highlight: Highlight, colors: [string], onAddHighlight: (highlight: Highlight) => void]>;
     }
 </script>
 
 <script lang="ts">
-    //import {debounce} from "$lib/utils.ts";
-    //import { preventDefault, stopPropagation } from "svelte/legacy";
-    //let { tipContext } = $props();
-    import { onMount } from 'svelte';
-    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
+    import { debounce } from "$lib/utils.ts";
 
     let {
         viewer,
-        addHighlight,
-        editHighlight,
-        onEdit,
-        onDelete,
-        onChangeColor,
+        highlightsStore,
         onTipUpdate,
         colors,
         clearTextSelection,
+
+        highlightPopup = defaultHighlightPopup,
+        editHighlightPopup = defaultEditHighlightPopup,
+        newHighlightPopup = defaultNewHighlightPopup,
     }: TipContainerProps = $props();
 
     const clamp = (value: number, left: number, right: number) =>
@@ -42,13 +46,11 @@
     let width = $state(0);
     let height = $state(0);
     let show = $state(false);
-    let isEdit = $state(false);
     let pinned = $state(false);
-    //let mouseInRef = $state.raw(false);
-    let mouseInRef = $state({ inref: false });
+    let mouseInRef = $state(false);
 
     let tipContainerState: any = $state({ show: false });
-    let highlight = $derived.by(() => {
+    let highlight: Highlight = $derived.by(() => {
         if (tipContainerState?.tip?.content.highlight) {
             return tipContainerState.tip.content.highlight;
         } else if (tipContainerState.highlight) {
@@ -67,46 +69,25 @@
         }
     });
 
-    /*onSetSelectionTip((_tipContainerState) => {
-        //if (show) return;
-        document.activeElement.blur();
-        show = _tipContainerState.show;
-        extTipContainerState = _tipContainerState;
-        updatePosition();
-        console.log(_tipContainerState)   
-    });*/
-
     const hideTip = (e, force = false) => {
-        //e.stopPropagation();
+        //handler for mouse click outside of the tip
         if (!force && e.target?.closest('.hl_tip_container')) return;
         if (show) {
             show = false;
             pinned = false;
-            mouseInRef.inref = false;
+            mouseInRef = false;
         }
     };
 
-    onTipUpdate((_tipContainerState, is_edit = false, is_pinned = false) => {
-        //TODO: debounce!!!
-        setTimeout(() => {
-            if (pinned && !is_pinned) return;
+    onTipUpdate(debounce((_tipContainerState, is_edit = false, is_pinned = false) => {        
+        if (pinned && !is_pinned) return;
+        pinned = is_pinned;
+        if (mouseInRef) return;
+        show = _tipContainerState.show;
+        tipContainerState = _tipContainerState;
+        updatePosition();        
+    }, 150));
 
-            isEdit = is_edit;
-            pinned = is_pinned;
-            //mouseInRef.inref = is_edit;
-            if (mouseInRef.inref) return;
-            show = _tipContainerState.show;
-            //console.log(isEdit)
-
-            //mouseInRef = _tipContainerState.mouseInRef;
-            tipContainerState = _tipContainerState;
-            //tipContainerState.mouseInRef = true;
-            updatePosition();
-            //return(() => {return mouseInRef.inref});
-        }, 150);
-    });
-
-    //const setBgColor = (color) => {}
     const updatePosition = () => {
         //console.log('run tipContainer effect');
         if (!tipContainerState.show) return;
@@ -136,20 +117,18 @@
 
     const setColor = (color) => {
         highlight.color = color;
-        editHighlight(highlight.id, { color: color });
+        highlightsStore.editHighlight(highlight.id, { color: color });
     };
-    // Destructuring current tip's position and content
-    //const { position, content } = currentTip;
-    //let NComponent = content.component;
+    
 </script>
 
 <style type="text/css">
-    .hl_tip_container {
+    :global(.hl_tip_container) {
         position: absolute;
         z-index: 999;
         text-align: center;
 
-        button.color {
+        :global(button.color) {
             border: none;
             padding: 8px;
             text-align: center;
@@ -161,7 +140,7 @@
         }
     }
 
-    .Highlight__popup {
+    :global(.Highlight__popup) {
         background-color: #2c3e50;
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #fff;
@@ -174,109 +153,80 @@
         font-size: 0.9rem;
     }
 
-    .Highlight__popup::-webkit-scrollbar {
+    :global(.Highlight__popup::-webkit-scrollbar) {
         width: 8px;
     }
 
-    .Highlight__popup::-webkit-scrollbar-thumb {
+    :global(.Highlight__popup::-webkit-scrollbar-thumb) {
         background-color: #4b6270;
         border-radius: 5px;
     }
 
-    .Highlight__popup::-webkit-scrollbar-thumb:hover {
+    :global(.Highlight__popup::-webkit-scrollbar-thumb:hover) {
         background-color: #576c7a;
     }
 
-    .Highlight__popup::-webkit-scrollbar-track {
+    :global(.Highlight__popup::-webkit-scrollbar-track) {
         background-color: #2c3e50;
         border-radius: 5px;
     }
 </style>
 
-
-<!-- TODO: separate into components-->
-{#if show}
-    {#if highlight.id}
-        <!-- Existing highlight -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div 
-            class="hl_tip_container " 
-            bind:clientHeight={height} 
-            bind:clientWidth={width} 
-            style="top: {top - height}px; left: {clampedLeft}px; padding: 3px;"
-            onmouseenter={() => {
-                mouseInRef.inref = true;     
-            }}
-            onmouseleave={() => {
-                if (pinned) return;
-                mouseInRef.inref = false;
-                show = false;
-            }} 
-        >
-            <!-- svelte-ignore a11y_consider_explicit_label --> 
-            <!-- TODO: edit button --> 
-            <div class="Highlight__popup">
-                {#if !pinned}
-                    {#if highlight.comment }
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <div style="margin: 5px;" onclick={()=>pinned = true}> 
-                            {#if highlight.comment.length > 20 }
-                            <span style="mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0));">
-                            {highlight.comment.slice(0, 21) + '...'}</span> (click to expand)
-                            {:else}
-                                {highlight.comment}
-                            {/if}
-                            
-                            <span style="font-size: 0.8em;">(click to edit)</span>
-                        </div>
-                    {:else}
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <div style="margin: 5px;" onclick={()=>pinned = true}>Comment has no Text  <span style="font-size: 0.8em;">(click to edit)</span></div>
-                    {/if}
-
-                {:else}
-                    <textarea 
-                        onchange={      
-                            (e)=> { editHighlight(highlight.id, {comment: (e.target as HTMLInputElement).value})}
-                        }
-                        value={highlight.comment ? highlight.comment : ''}
-                    ></textarea>
-                    <hr>
-                    <!--<button onclick={()=>{onEdit(highlight.id)}}>edit</button>-->
-                    {#each colors as color}
-                        <button class="color" onclick={()=>setColor(color)} style="background-color: {color}" onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
-                        onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}} ></button>
-                    {/each}
-                    <!-- TODO: add custom color/colorpicker? -->
-                    <button onclick={() => onDelete(highlight)}>delete</button>
-                {/if}
-
-            </div>
-
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_consider_explicit_label -->
+{#snippet defaultHighlightPopup(hl: any, setPinned: (flag: boolean) => void)}
+    <div class="Highlight__popup">
+    {#if hl.comment }
+        <div style="margin: 5px;" onclick={()=>setPinned(true)}> 
+            {#if hl.comment.length > 20 }
+                <span style="mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0));">
+                {hl.comment.slice(0, 21) + '...'}</span> (click to expand)
+            {:else}
+                {hl.comment}
+            {/if}        
+            <span style="font-size: 0.8em;">(click to edit)</span>
         </div>
     {:else}
-        <!-- New highlight (on text selection) -->
-        <div class="hl_tip_container Highlight__popup" 
-            bind:clientHeight={height} 
-            bind:clientWidth={width} 
-            style="top: {top - height + 5}px; left: {clampedLeft}px; padding: 3px;"
-        >
+        <div style="margin: 5px;" onclick={()=>setPinned(true)}>Comment has no Text  <span style="font-size: 0.8em;">(click to edit)</span></div>
+    {/if}
+    </div>
+{/snippet}
+
+{#snippet defaultEditHighlightPopup(highlight, colors, onEdit, onDelete)}
+    <div class="Highlight__popup">
+        <textarea 
+            onchange={(e) => onEdit((e.target as HTMLInputElement).value)}
+            value={highlight.comment ? highlight.comment : ''}
+        ></textarea>
+        <hr>
+        <!--<button onclick={()=>{highlightsStore.editHighlight(highlight.id)}}>edit</button>-->
+        {#each colors as color}
+            <!-- svelte-ignore a11y_consider_explicit_label -->
+            <button 
+                class="color" 
+                onclick={()=>setColor(color)} 
+                style="background-color: {color}" 
+                onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
+                onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}} >  
+            </button>
+            {/each}
+        <!-- TODO: add custom color/colorpicker? -->
+        <button onclick={() => onDelete(highlight)}>delete</button>
+    </div>
+{/snippet}
+
+{#snippet defaultNewHighlightPopup(highlight, colors, onAddHighlight)}
+    <div class="Highlight__popup">
             {#each colors as color}
                 <!-- svelte-ignore a11y_consider_explicit_label -->
                 <button 
                     class="color"  
                     onclick={
                         (e) => {
-                            if (highlight.id) {
-                                e.preventDefault(); 
-                                e.stopPropagation(); 
-                                setColor(color);
-                            } else {
+                            if (!highlight.id) {
                                 highlight.color = color;
-                                let _highlight = addHighlight(highlight);
-                                tipContainerState.highlight = _highlight;
-                                pinned = true;
-                                tipContainerState.clearSelection();
+                                onAddHighlight(highlight);
                             }
                         }
                     }
@@ -294,6 +244,70 @@
                     hideTip(e, true);
                 }}
             >copy</button>
+        </div>
+{/snippet}
+
+
+{#if show}
+    {#if highlight.id}
+        <!-- Existing highlight -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div 
+            class="hl_tip_container" 
+            bind:clientHeight={height} 
+            bind:clientWidth={width} 
+            style="top: {top - height}px; left: {clampedLeft}px; padding: 3px;"
+            onmouseenter={() => {
+                mouseInRef = true;     
+            }}
+            onmouseleave={() => {
+                if (pinned) return;
+                mouseInRef = false;
+                show = false;
+            }} 
+        >
+            <!-- svelte-ignore a11y_consider_explicit_label --> 
+            <!-- TODO: edit button --> 
+            {#if !pinned}
+                {@render highlightPopup(
+                    highlight, 
+                    (flag: boolean) => {
+                        pinned = flag;
+                    }
+                )}
+            {:else}
+                {@render editHighlightPopup(
+                    highlight, 
+                    colors, 
+                    (comment) => { 
+                        highlightsStore.editHighlight(
+                            highlight.id, 
+                            {comment: comment}
+                        );
+                    }, 
+                    (highlight) => {
+                        highlightsStore.deleteHighlight(highlight);
+                        pinned = false;
+                        tipContainerState.show = false;
+                    }
+                )}
+            {/if}
+        </div>
+    {:else}
+        <!-- New highlight (on text selection) -->
+        <div 
+            class="hl_tip_container"
+            bind:clientHeight={height} 
+            bind:clientWidth={width} 
+            style="top: {top - height + 5}px; left: {clampedLeft}px; padding: 3px;"
+        >
+            {@render newHighlightPopup(highlight, colors, (highlight) => {
+                let _highlight = highlightsStore.addHighlight(highlight);
+                tipContainerState.highlight = _highlight;
+                pinned = true;
+                tipContainerState.clearSelection();
+                }
+            )}
         </div>
     {/if}
 {/if}

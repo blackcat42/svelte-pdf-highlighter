@@ -15,14 +15,12 @@
         ) => void;
         onClick?: any;
         pdfHighlighterUtils: any;
-        setTip: (callback: any) => void;
     }
 
     let {
         editHighlight,
         onContextMenu,
         onClick,
-        setTip,
         pdfHighlighterUtils,
     }: HighlightContainerProps = $props();
     let contexts = getAllContexts();
@@ -42,7 +40,7 @@
     //});
 </script>
 
-<MonitoredHighlightContainer highlightTip={highlightTip} {setTip}> 
+<MonitoredHighlightContainer highlightTip={highlightTip} {pdfHighlighterUtils}> 
     {#if highlight.type === "text"}
         <TextHighlight
             isScrolledTo={isScrolledTo}
