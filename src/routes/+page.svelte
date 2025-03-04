@@ -175,63 +175,59 @@
         {pdfHighlighterUtils}
         {colors}
     />
-    <div
-        style="height: 100vh; width: 75vw; overflow: hidden; position: relative; flexGrow: 1"
-    >
-    <Toolbar setPdfScaleValue = {setPdfScaleValue}
+    <div style="height: 100vh; width: 75vw; overflow: hidden; position: relative; flexGrow: 1">
+        <Toolbar setPdfScaleValue = {setPdfScaleValue}
              pdfScaleValue = {pdfScaleValue}
              bind:selectedTool = {selectedTool}
              searchInPdf = {searchInPdf} />
 
-    {#if workerUrl !== null}         
-    <PdfLoader document={url} workerSrc={workerUrl}>
+        {#if workerUrl !== null}         
+            <PdfLoader document={url} workerSrc={workerUrl}>
 
-        <!-- Custom error and progress snippets (optional) -->
-        <!--
-        {#snippet errorMessage(error)}
-            {error}
-        {/snippet}
-        -->
-        <!--
-        {#snippet beforeLoad(loadingProgress)}
-            {Math.floor((loadingProgress.loaded / loadingProgress.total) * 100)}%
-        {/snippet}
-        -->
+                <!-- Custom error and progress snippets (optional) -->
+                <!--
+                {#snippet errorMessage(error)}
+                    {error}
+                {/snippet}
+                -->
+                <!--
+                {#snippet beforeLoad(loadingProgress)}
+                    {Math.floor((loadingProgress.loaded / loadingProgress.total) * 100)}%
+                {/snippet}
+                -->
 
-        {#snippet pdfHighlighterWrapper(pdfDocumentRef)}
-            <PdfHighlighter
-                bind:highlightsStore
-                bind:selectedTool 
-                pdfDocument={pdfDocumentRef}
-                style="height: calc(100% - 41px)"
-                onContextMenu={(e)=>handleContextMenu(e,'document',null)}
-                {pdfScaleValue}
-                {setPdfScaleValue}
-                onTipUpdate={(tipUpdater) => setTip = tipUpdater}
-                {setTip}
-                {onSearch}
-                {setPdfHighlighterUtils}
-            >
-            <HighlightContainer
-                {setTip}
-                editHighlight = {highlightsStore.editHighlight}
-                onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
-                onClick = {(e, data) => {
-                    e.stopPropagation();
-                    sidebarScrollToId(data.id);
-                    //setTip({highlight: data, show: true, position: data.position}, true, true);
-                }}
-                {pdfHighlighterUtils}
-            /> 
-            </PdfHighlighter>
-        {/snippet}
-          
-        </PdfLoader>
-    {/if}
-      </div>
-
-      {#if contextMenu} <ContextMenu {...contextMenu} /> {/if}
+                {#snippet pdfHighlighterWrapper(pdfDocumentRef)}
+                    <PdfHighlighter
+                        bind:highlightsStore
+                        bind:selectedTool 
+                        pdfDocument={pdfDocumentRef}
+                        style="height: calc(100% - 41px)"
+                        onContextMenu={(e)=>handleContextMenu(e,'document',null)}
+                        {pdfScaleValue}
+                        {setPdfScaleValue}
+                        onTipUpdate={(tipUpdater) => setTip = tipUpdater}
+                        {setTip}
+                        {onSearch}
+                        {setPdfHighlighterUtils}
+                    >
+                        <HighlightContainer
+                            {setTip}
+                            editHighlight = {highlightsStore.editHighlight}
+                            onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
+                            onClick = {(e, data) => {
+                                e.stopPropagation();
+                                sidebarScrollToId(data.id);
+                                //setTip({highlight: data, show: true, position: data.position}, true, true);
+                            }}
+                            {pdfHighlighterUtils}
+                        /> 
+                    </PdfHighlighter>
+                {/snippet}
+            </PdfLoader>
+        {/if}
     </div>
+    {#if contextMenu} <ContextMenu {...contextMenu} /> {/if}
+</div>
 
 <!-- disable browser default search bar -->
 <svelte:window 

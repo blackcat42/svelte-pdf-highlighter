@@ -5,22 +5,24 @@
      * @category Component Properties
      * @internal
      */
-    import type { PdfScaleValue } from '$lib/types.ts';
+    import type { PdfScaleValue } from '$lib/types';
     import type { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
+    import type { Snippet } from 'svelte';
+    import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
     export interface pdfHighlighterProps {
         pdfScaleValue: { val: PdfScaleValue };
         setPdfScaleValue: (value: PdfScaleValue) => void;
         highlightsStore: HighlightsModel;
         selectedTool: string;
-        pdfDocument: any;
-        children: any;
+        pdfDocument: PDFDocumentProxy;
+        children: Snippet;
         style: string;
         onContextMenu: (e: MouseEvent) => void;
-        onTipUpdate: (callback: any) => void;
-        setTip: (callback: any) => void;
-        onSearch: (options: any) => void;
-        setPdfHighlighterUtils: any;
+        onTipUpdate(callback: (...args: any[]) => void): void;
+        setTip(callback: (...args: any[]) => void): void;
+        onSearch(callback: (options: SearchOptions) => void): void;
+        setPdfHighlighterUtils(...args: any[]): void;
     }
 </script>
 
@@ -31,12 +33,12 @@
     import type {
         Highlight,
         HighlightBindings,
-        PdfSelection,
+        //PdfSelection,
         Tip,
         SearchOptions,
         ViewportPosition,
         Content,
-    } from '$lib/types.ts';
+    } from '$lib/types';
 
     import {
         asElement,
@@ -44,24 +46,26 @@
         getPagesFromRange,
         getWindow,
         isHTMLElement,
-    } from '$lib/pdf_utils/pdfjs-dom.ts';
+    } from '$lib/pdf_utils/pdfjs-dom';
     import { on } from 'svelte/events';
     import { mount, unmount, setContext, getContext, onMount, getAllContexts } from 'svelte';
     import HighlightLayer from '$lib/components/HighlightLayer.svelte';
     import MouseSelection from '$lib/components/MouseSelection.svelte';
     import TipContainer from '$lib/components/TipContainer.svelte';
-    import getClientRects from '$lib/pdf_utils/get-client-rects.ts';
-    import getBoundingRect from '$lib/pdf_utils/get-bounding-rect.ts';
-    import { scaledToViewport, viewportPositionToScaled } from '$lib/pdf_utils/coordinates.ts';
+    import getClientRects from '$lib/pdf_utils/get-client-rects';
+    import getBoundingRect from '$lib/pdf_utils/get-bounding-rect';
+    import { scaledToViewport, viewportPositionToScaled } from '$lib/pdf_utils/coordinates';
     import type {
         EventBus as TEventBus,
         PDFLinkService as TPDFLinkService,
         PDFViewer as TPDFViewer,
+        PDFFindController as TPDFFindController,
     } from 'pdfjs-dist/web/pdf_viewer.mjs';
 
+    type PointerEventHandler = (event?: PointerEvent & { currentTarget: EventTarget & HTMLElement }) => void;
     let pdfViewerReady = false;
     let EventBus: typeof TEventBus,
-        PDFFindController,
+        PDFFindController: typeof TPDFFindController,
         PDFLinkService: typeof TPDFLinkService,
         PDFViewer: typeof TPDFViewer;
     (async () => {
@@ -87,8 +91,6 @@
 
     let doc;
 
-    //let getNextId = () => String(Math.random()).slice(5)+String(Date.now()).slice(8);
-
     let {
         pdfScaleValue,
         setPdfScaleValue,
@@ -110,10 +112,10 @@
 
     let addHighlight = highlightsStore.addHighlight;
     let editHighlight = highlightsStore.editHighlight;
-    let addGhostHighlight = highlightsStore.addGhostHighlight;
-    let removeGhostHighlights = highlightsStore.removeGhostHighlights;
+    //let addGhostHighlight = highlightsStore.addGhostHighlight;
+    //let removeGhostHighlights = highlightsStore.removeGhostHighlights;
 
-    let contexts = getAllContexts(); //[document]
+    
 
     // State
     let tip: Tip | null = $state(null);
@@ -138,7 +140,7 @@
     let linkServiceRef: InstanceType<typeof PDFLinkService>;
     let resizeObserverRef: ResizeObserver | null = null;
     let viewerRef: InstanceType<typeof PDFViewer> | null = null;
-    let findController_instance;
+    let findController_instance: TPDFFindController;
 
     const defaultSearchOptions: SearchOptions = {
         type: 'again',
@@ -266,7 +268,6 @@
         if (!containerNodeRef) return;
         pdfScaleValue; //dependence
         handleScaleValue();
-        //return () => {};
     });
 
     // Event listeners
@@ -357,7 +358,7 @@
     const handleMouseDown: PointerEventHandler = (event) => {
         event.stopPropagation();
         clearTextSelection();
-        //return;
+        if (!(event.target instanceof Element)) return;
         if (
             selectedTool === 'hand' ||
             (!event.target.closest('span') &&
@@ -389,6 +390,7 @@
 
     // Render Highlight layers
     let layers = {};
+    let contexts = getAllContexts();
 
     const renderHighlightLayer = (highlightBindings: HighlightBindings, pageNumber: number) => {
         if (!viewerRef) return;
