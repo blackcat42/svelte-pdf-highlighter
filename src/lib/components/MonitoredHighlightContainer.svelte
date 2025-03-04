@@ -33,7 +33,7 @@
 </script>
 
 <script lang="ts">
-    import type { Tip } from '$lib/types.ts';
+    import type { Tip } from '$lib/types';
     //import {setContext, getContext} from "svelte";
 
     /**

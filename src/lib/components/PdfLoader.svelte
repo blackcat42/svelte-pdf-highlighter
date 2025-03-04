@@ -59,7 +59,7 @@
         TypedArray,
         PDFDocumentProxy,
         OnProgressParameters,
-    } from 'pdfjs-dist/types/src/display/api.ts';
+    } from 'pdfjs-dist/types/src/display/api';
     import type { Snippet } from 'svelte';
 
     import { setContext, getContext, onMount } from 'svelte';

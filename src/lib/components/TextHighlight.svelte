@@ -54,7 +54,7 @@
 <script lang="ts">
     //import React, { CSSProperties, MouseEvent } from "react";
 
-    import type { ViewportHighlight } from '$lib/types.ts';
+    import type { ViewportHighlight } from '$lib/types';
     import { getContext } from 'svelte';
 
     

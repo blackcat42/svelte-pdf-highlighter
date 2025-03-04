@@ -1,5 +1,5 @@
-import groupHighlightsByPage from './pdf_utils/group-highlights-by-page.ts';
-import type { Highlight, ViewportHighlight } from './types.ts';
+import groupHighlightsByPage from '$lib/pdf_utils/group-highlights-by-page';
+import type { Highlight, ViewportHighlight } from '$lib/types';
 //import { CommentedHighlight } from "$lib/types";
 
 export class HighlightsModel {

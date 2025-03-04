@@ -1,4 +1,5 @@
 <script lang="ts" module>
+    import type { Snippet } from 'svelte';
     /**
      * The props type for {@link HighlightLayer}.
      *
@@ -36,7 +37,7 @@
          * It will be given appropriate context for a single highlight, allowing it to render
          * a single {@link TextHighlight}, {@link AreaHighlight}, etc., in the correct place.
          */
-        children: any;
+        children: Snippet;
 
         highlightsStore: any;
         pdfScaleValue: any;
@@ -44,9 +45,9 @@
 </script>
 
 <script lang="ts">
-    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer.ts';
-    import { scaledPositionToViewport, viewportToScaled } from '$lib/pdf_utils/coordinates.ts';
-    import screenshot from '$lib/pdf_utils/screenshot.ts';
+    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
+    import { scaledPositionToViewport, viewportToScaled } from '$lib/pdf_utils/coordinates';
+    import screenshot from '$lib/pdf_utils/screenshot';
     import type {
         GhostHighlight,
         Highlight,

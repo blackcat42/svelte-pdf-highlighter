@@ -17,7 +17,7 @@
     //import { preventDefault, stopPropagation } from "svelte/legacy";
     //let { tipContext } = $props();
     import { onMount } from 'svelte';
-    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer.ts';
+    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
 
     let {
         viewer,

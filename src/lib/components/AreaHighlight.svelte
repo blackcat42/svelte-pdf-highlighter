@@ -48,7 +48,7 @@
 
     //import { getPageFromElement } from '$lib/pdf_utils/pdfjs-dom.ts';
     import RND from '$lib/components/RND.svelte';
-    import type { LTWHP, ViewportHighlight } from '$lib/types.ts';
+    import type { LTWHP, ViewportHighlight } from '$lib/types';
 
     /**
      * The props type for {@link AreaHighlight}.

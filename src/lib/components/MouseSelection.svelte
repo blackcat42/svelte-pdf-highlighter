@@ -66,12 +66,12 @@
 </script>
 
 <script lang="ts">
-    import { asElement, getPageFromElement, isHTMLElement } from '$lib/pdf_utils/pdfjs-dom.ts';
-    import { cssStringify } from '$lib/utils.ts';
-    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer.ts';
-    import { viewportPositionToScaled } from '$lib/pdf_utils/coordinates.ts';
-    import screenshot from '$lib/pdf_utils/screenshot.ts';
-    import type { LTWH, LTWHP, ScaledPosition, ViewportPosition } from '$lib/types.ts';
+    import { asElement, getPageFromElement, isHTMLElement } from '$lib/pdf_utils/pdfjs-dom';
+    import { cssStringify } from '$lib/utils';
+    import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
+    import { viewportPositionToScaled } from '$lib/pdf_utils/coordinates';
+    import screenshot from '$lib/pdf_utils/screenshot';
+    import type { LTWH, LTWHP, ScaledPosition, ViewportPosition } from '$lib/types';
     import { onMount } from 'svelte';
     type Coords = {
         x: number;

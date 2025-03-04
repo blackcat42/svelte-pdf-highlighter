@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { cssStringify } from '$lib/utils.ts';
+    import { cssStringify } from '$lib/utils';
     import { onMount, getContext } from 'svelte';
     import { on } from 'svelte/events';
 
