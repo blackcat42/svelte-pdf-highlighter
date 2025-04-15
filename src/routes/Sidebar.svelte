@@ -305,7 +305,7 @@
                         <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: e.target.value})}></textarea></div>
                         <div style = "background: #f8f9fa; border-top: 1px solid #ddd;">
                             {#if highlight.content.text}
-                                <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}>
+                                <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.scrollToHighlight(highlight)}}>
                                         {highlight.content.text.slice(0, 90).trim()}…
                                 </blockquote>
                             {/if}
@@ -315,7 +315,7 @@
                                 <div
                                     class="highlight__image__container"
                                     style="marginTop: 0.5rem"
-                                    onclick={()=>{pdfHighlighterUtils.utils.scrollToHighlight(highlight)}}
+                                    onclick={()=>{pdfHighlighterUtils.scrollToHighlight(highlight)}}
                                 >
                                     <img
                                         src={highlight.content.image}

@@ -29,7 +29,7 @@
     let { highlight, viewportToScaled, screenshot, isScrolledTo, highlightBindings }: any =
         getContext('highlightUtils'); //HighlightContext
 
-    const { toggleEditInProgress } = pdfHighlighterUtils.utils; //usePdfHighlighterContext();
+    const { toggleEditInProgress } = pdfHighlighterUtils; //usePdfHighlighterContext();
     let highlightTip: Tip = $state({
         position: highlight.position,
         content: { highlight },

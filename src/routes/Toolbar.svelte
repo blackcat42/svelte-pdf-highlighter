@@ -1,48 +1,43 @@
 <script lang="ts">
-    //import { pdfScaleValue } from "$lib/components/pdfHighlighterUtils.shared.svelte.ts";
     import { debounce } from '$lib/utils.ts';
     interface ToolbarProps {
-        setPdfScaleValue: (value: number) => void;
         selectedTool: string;
-        pdfScaleValue: any;
         searchInPdf: any;
+        pdfHighlighterUtils: any;
     }
 
     let {
-        setPdfScaleValue,
-        pdfScaleValue,
         selectedTool = $bindable(),
         searchInPdf,
+        pdfHighlighterUtils,
     }: ToolbarProps = $props();
-    //let zoom: number | null = $state(null);
-    //let isHighlightPen: boolean = $state(false);
 
     const zoomIn = () => {
-        if (pdfScaleValue.val > 0) {
-            if (pdfScaleValue.val < 4) {
-                setPdfScaleValue(parseFloat(pdfScaleValue.val) + 0.1);
+        if (pdfHighlighterUtils.currentScaleValue > 0) {
+            if (pdfHighlighterUtils.currentScaleValue < 4) {
+                pdfHighlighterUtils.setCurrentScaleValue(parseFloat(pdfHighlighterUtils.currentScaleValue) + 0.1);
                 //zoom = zoom + 0.1;
             }
         } else {
-            setPdfScaleValue(1);
+            pdfHighlighterUtils.setCurrentScaleValue(1);
             //zoom = 1;
         }
     };
 
     const zoomOut = () => {
-        if (pdfScaleValue.val > 0) {
-            if (pdfScaleValue.val > 0.2) {
-                setPdfScaleValue(parseFloat(pdfScaleValue.val) - 0.1);
+        if (pdfHighlighterUtils.currentScaleValue > 0) {
+            if (pdfHighlighterUtils.currentScaleValue > 0.2) {
+                pdfHighlighterUtils.setCurrentScaleValue(parseFloat(pdfHighlighterUtils.currentScaleValue) - 0.1);
                 //zoom = zoom - 0.1;
                 //pdfScaleValue.val = zoom;
             }
         } else {
-            setPdfScaleValue(1);
+            pdfHighlighterUtils.setCurrentScaleValue(1);
             //zoom = 1;
         }
     };
     const zoomString = (val) => {
-        setPdfScaleValue(val);
+        pdfHighlighterUtils.setCurrentScaleValue(val);
     };
 
     let searchOptions = $state({
@@ -147,11 +142,13 @@
 
 <div class="Toolbar">
         <div class="ZoomControls">
-            {#if (typeof pdfScaleValue.val === 'number')}
-                {(pdfScaleValue.val * 100).toFixed(0)}%
-            {:else}
-                {pdfScaleValue.val}
-            {/if}
+            <div style="width: 2.5rem">
+                {#if (parseFloat(pdfHighlighterUtils.currentScale) > 0)}
+                    {(pdfHighlighterUtils.currentScale * 100).toFixed(0)}%
+                {:else}
+                    {pdfHighlighterUtils.currentScale}
+                {/if}
+            </div>
             <button title="Zoom out" onclick={zoomOut}>-</button>
             <button title="Zoom in" onclick={zoomIn}>+</button>
             <button class="Toolbar__page-width" onclick={()=>{zoomString('page-width')}}></button>

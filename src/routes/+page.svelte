@@ -36,21 +36,21 @@
     setContext('document', url);
     //document: string | URL | TypedArray | DocumentInitParameters;
 
-    let pdfScaleValue: { val: PdfScaleValue } = $state({ val: 1 });
-    setContext('pdfScaleValue', pdfScaleValue);
-    const setPdfScaleValue = (value: PdfScaleValue) => {
-        if (typeof value === 'string') {
-            pdfScaleValue.val = value;
-        } else if (value >= 2 || value <= 0) {
-            pdfScaleValue.val = 1;
-        } else {
-            pdfScaleValue.val = parseFloat(value.toFixed(1));
-        }
-    };
+    //custom field example
+    // interface MyHighlight extends CommentedHighlight {
+    //     custom_field: number;
+    // }
+    // let _highlights: Array<MyHighlight> = TEST_HIGHLIGHTS['https://arxiv.org/pdf/2203.11115'].map((item) => {
+    //     item['custom_field'] = 0;
+    //     return item as MyHighlight;
+    // });
 
     let _highlights: Array<Highlight> = TEST_HIGHLIGHTS['https://arxiv.org/pdf/2203.11115'] ?? [];
     let highlightsStore = new HighlightsModel(_highlights);
-    //let unsubscribe = highlightsStore.subscribe((h)=>{})
+    //let unsubscribe = highlightsStore.subscribe((h)=>{
+    //    //save data to server...
+    //    if (true) return new Error('Failed to save highlights');
+    //});
 
     let contextMenu: ContextMenuProps | null = $state(null);
 
@@ -120,7 +120,7 @@
 
     let sidebarScrollToId: (id: string) => void;
 
-    let pdfHighlighterUtils = $state({ utils: null });
+    let pdfHighlighterUtils = $state({});
 
 
     // Scroll to highlight based on hash in the URL
@@ -128,8 +128,8 @@
         //TODO
         const highlight = highlightsStore.getHighlightById(parseIdFromHash());
 
-        if (highlight && pdfHighlighterUtils.utils) {
-            pdfHighlighterUtils.utils.scrollToHighlight(highlight);
+        if (highlight && pdfHighlighterUtils) {
+            pdfHighlighterUtils.scrollToHighlight(highlight);
         }
     };*/
 
@@ -150,7 +150,6 @@
         color: #333333;
     }
 </style>
-
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="App" style="display: flex; height: 100vh;">
@@ -163,12 +162,12 @@
         sidebarScrollToId = {(callback: (id: string) => void) => sidebarScrollToId = callback}
         {pdfHighlighterUtils}
         {colors}
-    />
+    /> 
     <div style="height: 100vh; width: 75vw; overflow: hidden; position: relative; flexGrow: 1">
-        <Toolbar setPdfScaleValue = {setPdfScaleValue}
-             pdfScaleValue = {pdfScaleValue}
+        <Toolbar
              bind:selectedTool = {selectedTool}
-             searchInPdf = {pdfHighlighterUtils.utils?.search} />
+             searchInPdf = {pdfHighlighterUtils.search}
+             {pdfHighlighterUtils} />
 
         {#if workerUrl !== null}         
             <PdfLoader document={url} workerSrc={workerUrl}>
@@ -192,9 +191,7 @@
                         pdfDocument={pdfDocumentRef}
                         style="height: calc(100% - 41px)"
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
-                        {pdfScaleValue}
-                        {setPdfScaleValue}
-                        onSearch = {(callback) => pdfHighlighterUtils.utils.search = callback}
+                        onSearch = {(callback) => pdfHighlighterUtils.search = callback}
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
                     >
                         <HighlightContainer

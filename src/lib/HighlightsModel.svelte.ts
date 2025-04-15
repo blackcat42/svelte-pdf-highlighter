@@ -2,24 +2,15 @@ import groupHighlightsByPage from '$lib/pdf_utils/group-highlights-by-page';
 import type { Highlight, ViewportHighlight } from '$lib/types';
 //import { CommentedHighlight } from "$lib/types";
 
-export class HighlightsModel {
-    private _highlights: Array<Highlight> = $state([]);
+export class HighlightsModel<T extends Highlight> {
+    private _highlights: Array<T> = $state([]);
 
     private _highlightsByPage = $derived.by(() => groupHighlightsByPage([...this.highlights]));
 
-    private listeners = new Set<(arr: Array<Highlight>) => void>();
+    private listeners = new Set<(arr: Array<T>) => any>();
 
-    constructor(highlights: Array<Highlight>) {
+    constructor(highlights: Array<T>) {
         this._highlights = highlights;
-        /*this.addHighlight = this.addHighlight.bind(this);
-        this.editHighlight = this.editHighlight.bind(this);
-        this.deleteHighlight = this.deleteHighlight.bind(this);
-
-        this.getHighlightById = this.getHighlightById.bind(this);
-        this.getHighlightIndexById = this.getHighlightIndexById.bind(this);
-
-        this.addGhostHighlight = this.addGhostHighlight.bind(this);
-        this.removeGhostHighlights = this.removeGhostHighlights.bind(this);*/
     }
 
     get highlights() {
@@ -27,32 +18,34 @@ export class HighlightsModel {
     }
     private set highlights(new_highlights) {
         this._highlights = new_highlights;
-        this.listeners.forEach((listener) => listener(this._highlights)); //TODO check response
+        this.listeners.forEach((listener) => {
+            let response = listener(this._highlights);
+            if (response instanceof Error) console.log(response.message);
+        });
     }
     get highlightsByPage() {
         return this._highlightsByPage;
     }
 
-    //TODO: callback return type
-    public subscribe = (callback: (arr: Array<Highlight>) => void) => {
+    public subscribe = (callback: (arr: Array<T>) => any) => {
         this.listeners.add(callback);
         return () => this.listeners.delete(callback);
     };
 
-    public addHighlight = (highlight: Highlight) => {
+    public addHighlight = (highlight: T) => {
         console.log('Saving highlight', highlight);
         let id = this.getNextId();
         this.highlights.push({ ...highlight, id: id });
         return this.getHighlightById(id);
     };
 
-    public editHighlight = (idToUpdate: string, edit: Partial<Highlight>) => {
+    public editHighlight = (idToUpdate: string, edit: Partial<T>) => {
         console.log(`Editing highlight ${idToUpdate} with `, edit);
         this.highlights = this.highlights.map((highlight) =>
             highlight.id === idToUpdate ? { ...highlight, ...edit } : highlight,
         );
     };
-    public deleteHighlight = (highlight: Highlight | ViewportHighlight) => {
+    public deleteHighlight = (highlight: T | ViewportHighlight) => {
         console.log('Deleting highlight', highlight);
         this.highlights = this.highlights.filter((item) => {
             if (item.id === highlight.id && item.comment && item?.comment?.length > 3) {
@@ -70,7 +63,7 @@ export class HighlightsModel {
         this.highlights = [];
     };
 
-    public addGhostHighlight = (hl: Highlight) => {
+    public addGhostHighlight = (hl: T) => {
         this.highlights.push({ ...hl, id: 'TEMP' + this.getNextId(), is_temp: true });
     };
     public removeGhostHighlights = () => {

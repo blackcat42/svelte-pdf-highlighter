@@ -11,8 +11,6 @@
     import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
     export interface pdfHighlighterProps {
-        pdfScaleValue: { val: PdfScaleValue };
-        setPdfScaleValue: (value: PdfScaleValue) => void;
         highlightsStore: HighlightsModel;
         selectedTool: string;
         pdfDocument: PDFDocumentProxy;
@@ -25,7 +23,7 @@
         //onTipUpdate(callback: (...args: any[]) => void): void;
         onSearch(callback: (options: SearchOptions) => void): void;
         //setPdfHighlighterUtils(...args: any[]): void;
-        pdfHighlighterUtils;
+        pdfHighlighterUtils: any;
     }
 </script>
 
@@ -95,8 +93,6 @@
     let doc;
 
     let {
-        pdfScaleValue,
-        setPdfScaleValue,
         highlightsStore = $bindable(),
         selectedTool = $bindable('text_selection'),
         pdfDocument,
@@ -118,6 +114,7 @@
     //let addGhostHighlight = highlightsStore.addGhostHighlight;
     //let removeGhostHighlights = highlightsStore.removeGhostHighlights;
 
+    
     
 
     // State
@@ -237,11 +234,11 @@
                 (event) => {
                     if (event.ctrlKey) {
                         event.preventDefault();
-                        setPdfScaleValue(
-                            typeof pdfScaleValue.val == 'number'
-                                ? pdfScaleValue.val - event.deltaY / 1000
+                        pdfHighlighterUtils.setCurrentScaleValue(
+                            typeof pdfHighlighterUtils.currentScaleValue == 'number'
+                                ? pdfHighlighterUtils.currentScaleValue - event.deltaY / 1000
                                 : 1.0,
-                        ); //TODO: get actual scale?
+                        );
                         //handleScaleValue();
                     }
                 },
@@ -269,7 +266,7 @@
         console.log('PdfHighlighter effect run');
         if (!isViewerReady) return;
         if (!containerNodeRef) return;
-        pdfScaleValue; //dependence
+        pdfHighlighterUtils.currentScaleValue; //dependence
         handleScaleValue();
     });
 
@@ -337,7 +334,7 @@
                 clearTextSelection();
             };
 
-            pdfHighlighterUtils.utils.setTip(tipContainerState);
+            pdfHighlighterUtils.setTip(tipContainerState);
             //addGhostHighlight(selectionRef);
         } else {
             highlightsStore.addHighlight(selectionRef, '');
@@ -386,8 +383,9 @@
     };
 
     const handleScaleValue = () => {
-        if (viewerRef && isViewerReady) {
-            viewerRef.currentScaleValue = pdfScaleValue.val.toString();
+        if (viewerRef && isViewerReady && typeof pdfHighlighterUtils.currentScaleValue !== 'undefined') {
+            viewerRef.currentScaleValue = pdfHighlighterUtils.currentScaleValue.toString();
+            pdfHighlighterUtils.currentScale = viewerRef.currentScale;
         }
     };
 
@@ -411,7 +409,7 @@
                 highlightBindings: highlightBindings,
                 children: children,
                 highlightsStore: highlightsStore,
-                pdfScaleValue: pdfScaleValue,
+                pdfHighlighterUtils: pdfHighlighterUtils,
             },
             context: contexts,
         });
@@ -513,7 +511,7 @@
         }, 100);
     };
 
-    pdfHighlighterUtils.utils = {
+    pdfHighlighterUtils = {
             isEditingOrHighlighting,
             getCurrentSelection: () => selectionRef,
             toggleEditInProgress,
@@ -524,6 +522,17 @@
             scrollToHighlight,
             getViewer: () => viewerRef,
             getTip: () => tip,
+            currentScale: 1,
+            currentScaleValue: 1,
+            setCurrentScaleValue: (value: PdfScaleValue) => {
+                if (typeof value === 'string') {
+                    pdfHighlighterUtils.currentScaleValue = value;
+                } else if (value > 3 || value <= 0) {
+                    //pdfHighlighterUtils.pdfScaleValue.val = 1;
+                } else {
+                    pdfHighlighterUtils.currentScaleValue = parseFloat(value.toFixed(1));
+                }
+            },
         };
 
     let enableTextSelection = $state(true);
@@ -660,7 +669,7 @@
     {#if isViewerReady}
         <TipContainer 
             {clearTextSelection} 
-            onTipUpdate = {(tipUpdater) => pdfHighlighterUtils.utils.setTip = tipUpdater} 
+            onTipUpdate = {(tipUpdater) => pdfHighlighterUtils.setTip = tipUpdater} 
             viewer={viewerRef!}
             colors={colors} 
             {highlightsStore}

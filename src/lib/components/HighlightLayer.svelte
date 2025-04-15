@@ -40,7 +40,7 @@
         children: Snippet;
 
         highlightsStore: any;
-        pdfScaleValue: any;
+        pdfHighlighterUtils: any;
     }
 </script>
 
@@ -79,7 +79,7 @@
         highlightBindings,
         children,
         highlightsStore,
-        pdfScaleValue,
+        pdfHighlighterUtils,
     }: HighlightLayerProps = $props();
 
     let currentHighlights = $derived(highlightsStore.highlightsByPage[pageNumber]);
@@ -129,7 +129,7 @@
 
     $effect.pre(() => {
         //TODO: remove effects and keys, force remount whole layer (when scale or highlights[page_number] change) instead
-        pdfScaleValue.val; //dependence
+        pdfHighlighterUtils.currentScale; //dependence
         //scrolledToHighlightId;
         a_currentHighlights = getScaledHighlights(currentHighlights);
         //console.log('run HL effect, page:' + pageNumber);
@@ -143,7 +143,7 @@
     }
 </style>
 
-{#key pdfScaleValue.val}
+{#key pdfHighlighterUtils.currentScale}
 <div>
     {#each a_currentHighlights as highlightUtils (highlightUtils.highlight.id)}
 

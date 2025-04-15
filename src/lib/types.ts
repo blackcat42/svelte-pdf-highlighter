@@ -1,11 +1,3 @@
-//import { Highlight, Content } from "./react-pdf-highlighter-extended";
-
-// export interface CommentedHighlight extends Highlight {
-//   content: Content;
-//   comment?: string;
-// }
-//import { ReactNode } from "react";
-//import { Root } from "react-dom/client";
 
 /**
  * A rectangle as measured by the viewport.
