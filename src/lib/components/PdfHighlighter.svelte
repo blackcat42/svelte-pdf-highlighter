@@ -274,6 +274,7 @@
     //const handleWheelScale =
 
     let isDragging_MouseDown = $state(false);
+    let isSelectionInProgress = $state(false);
     const handleScroll = () => {
         scrolledToHighlightIdRef = null;
     };
@@ -286,6 +287,9 @@
             viewerRef!.container.removeEventListener('mousemove', onDragScroll);
             //isGrabbing = false;
             isDragging_MouseDown = false;
+        }
+        if (isSelectionInProgress) {
+            isSelectionInProgress = false;
         }
         const container = containerNodeRef;
         const selection = getWindow(container).getSelection();
@@ -378,8 +382,11 @@
         if (
             !isHTMLElement(event.target) ||
             asElement(event.target).closest('.my_tip_container') // Ignore selections on tip container
-        )
+        ) {
             return;
+        } else if (!isDragging_MouseDown) {
+            isSelectionInProgress = true;
+        }
     };
 
     const handleScaleValue = () => {
@@ -532,6 +539,7 @@
                 } else {
                     pdfHighlighterUtils.currentScaleValue = parseFloat(value.toFixed(1));
                 }
+                pdfHighlighterUtils.setTip(null);
             },
         };
 
@@ -562,6 +570,8 @@
             return 'isPen pdfViewer removePageBorders';
         } else if (selectedTool === 'area_selection') {
             return 'isArea pdfViewer removePageBorders';
+        } else if (isSelectionInProgress) {
+            return 'isSelectionInProgress pdfViewer removePageBorders';
         } else {
             return 'pdfViewer removePageBorders';
         }
@@ -641,6 +651,10 @@
 
     :global(.isArea .textLayer, .isArea .textLayer *) {
         cursor: crosshair;
+    }
+
+    :global(.isSelectionInProgress .PdfHighlighter__highlight-layer) {
+        z-index: -1;
     }
 </style>
 

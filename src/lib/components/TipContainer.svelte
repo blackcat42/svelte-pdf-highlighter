@@ -79,14 +79,20 @@
         }
     };
 
-    onTipUpdate(debounce((_tipContainerState, is_edit = false, is_pinned = false) => {        
-        if (pinned && !is_pinned) return;
-        pinned = is_pinned;
+    const updateTip = (_tipContainerState) => {
+        if (_tipContainerState === null) {
+            hideTip(null, true);
+            return;
+        }       
+        if (pinned && !_tipContainerState.pinned) return;
+        pinned = _tipContainerState.pinned;
         if (mouseInRef) return;
         show = _tipContainerState.show;
         tipContainerState = _tipContainerState;
         updatePosition();        
-    }, 150));
+    }
+
+    onTipUpdate(debounce(updateTip, 150));
 
     const updatePosition = () => {
         //console.log('run tipContainer effect');

@@ -145,7 +145,7 @@
 
 {#key pdfHighlighterUtils.currentScale}
 <div>
-    {#each a_currentHighlights as highlightUtils (highlightUtils.highlight.id)}
+    {#each [...a_currentHighlights].reverse() as highlightUtils (highlightUtils.highlight.id)}
 
     <HighlightChildrenWrapper child_context={highlightUtils}>
         {@render children?.()}
