@@ -108,6 +108,7 @@
     let {
         viewer,
         onSelection,
+        onMouseUp,
         onReset,
         onDragStart,
         enableAreaSelection,
@@ -134,7 +135,9 @@
     let container;
     let mouseDown = $state(false);
     const handleMouseUp = (event: MouseEvent) => {
+        if (!mouseDown) return;
         mouseDown = false;
+        onMouseUp();
         if (Boolean(asElement(event.target).closest('.AreaHighlight'))) return;
         if (!start || !end || !startTargetRef) return;
 

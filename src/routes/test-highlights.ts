@@ -40,6 +40,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
       },
       comment: "Better code!",
       id: "32604966305545835",
+      z_index: 1,
     },
     {
       type: "area",
@@ -61,6 +62,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
       },
       comment: "JavaScript",
       id: "9850481941481022",
+      z_index: 1,
     },
     {
       type: "text",
@@ -108,6 +110,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
         ],
       },
       id: "7523977432979492",
+      z_index: 1,
     },
     {
       type: "area",
@@ -128,6 +131,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
         rects: [],
       },
       id: "9252832906467952",
+      z_index: 1,
     },
     {
       type: "text",
@@ -166,6 +170,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
         ],
       },
       id: "9298580906684795",
+      z_index: 1,
     },
   ],
   "https://arxiv.org/pdf/1604.02480": [
@@ -198,6 +203,7 @@ export const testHighlights: Record<string, Array<CommentedHighlight>> = {
       },
       comment: "Static Single Assignment",
       id: "29668244118038056",
+      z_index: 1,
     },
   ],
 };

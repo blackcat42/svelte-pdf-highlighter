@@ -17,12 +17,31 @@ export function cssStringify(obj: Object, postfix: string): string {
     return res;
 }
 
-export function debounce(func, timeout = 300) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            func.apply(this, args);
-        }, timeout);
-    };
+
+type Debounced = {(...args: unknown[]): any, cancel: ()=> void};
+export function debounce(func: (...args: unknown[]) => unknown, _timeout: number): Debounced;
+export function debounce(func: (...args: unknown[]) => unknown, _timeout: () => number): Debounced;
+export function debounce(func, _timeout) {
+    let timeout = 300;
+    let timer: number;
+
+    let f: Debounced = Object.assign(
+        (...args: unknown[]) => {
+            if (typeof _timeout === 'function') {
+                timeout = _timeout();
+                //console.log(_timeout());
+            } else if (typeof _timeout === 'number') {
+                timeout = _timeout;
+            }
+            
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                func.apply(this, args);
+            }, timeout);
+        },
+        { 
+            cancel: () => {clearTimeout(timer)} 
+        }
+    );
+    return f;
 }

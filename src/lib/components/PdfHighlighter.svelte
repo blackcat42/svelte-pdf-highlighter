@@ -24,6 +24,7 @@
         onSearch(callback: (options: SearchOptions) => void): void;
         //setPdfHighlighterUtils(...args: any[]): void;
         pdfHighlighterUtils: any;
+        selectionDelay: number;
     }
 </script>
 
@@ -106,11 +107,17 @@
         onSearch,
         //setPdfHighlighterUtils,
         pdfHighlighterUtils = $bindable(),
+        selectionDelay = $bindable(1500),
     }: pdfHighlighterProps = $props();
 
-    let enableAreaSelection: (e: MouseEvent) => boolean = (event) =>
-        event.altKey || selectedTool === 'area_selection';
-
+    let enableAreaSelection: (e: MouseEvent) => boolean = (event) => {
+        /*if (event.altKey) {
+            selectedTool = 'area_selection';
+            return true;
+        }*/
+        //return event.altKey || selectedTool === 'area_selection';
+        return selectedTool === 'area_selection';
+    }
     //let addGhostHighlight = highlightsStore.addGhostHighlight;
     //let removeGhostHighlights = highlightsStore.removeGhostHighlights;
 
@@ -119,6 +126,8 @@
 
     // State
     let tip: Tip | null = $state(null);
+    let currentHl = $state(null);
+    let currentHlIndex = $state(0);
     //const setTip = (val) => tip = val;
     const setHLColor = (id, color) => {
         highlightsStore.editHighlight(id, { color: color });
@@ -288,13 +297,16 @@
             //isGrabbing = false;
             isDragging_MouseDown = false;
         }
-        if (isSelectionInProgress) {
-            isSelectionInProgress = false;
-        }
+        
         const container = containerNodeRef;
         const selection = getWindow(container).getSelection();
         //console.log(selection)
-        if (selection.type !== 'Range') return;
+        if (selection.type !== 'Range') {
+            if (isSelectionInProgress) {
+                isSelectionInProgress = false;
+            }
+            return;
+        };
 
         if (!container || !selection || selection.isCollapsed || !viewerRef) return;
 
@@ -324,7 +336,12 @@
             content,
             type: 'text',
             position: scaledPosition,
+            parent_hl_id: currentHl,
+            z_index: currentHlIndex + 1,
+            //z_index: currentHlIndex,
         };
+        currentHl = null;
+        currentHlIndex = 0;
 
         if (selectedTool !== 'highlight_pen') {
             tipContainerState.show = true;
@@ -367,7 +384,8 @@
             selectedTool === 'hand' ||
             (!event.target.closest('span') &&
                 !event.target.closest('.resizers') &&
-                selectedTool !== 'area_selection')
+                selectedTool !== 'area_selection') &&
+                !event.target.closest('.TextHighlight__part')
         ) {
             pos = {
                 left: viewerRef!.container.scrollLeft,
@@ -386,6 +404,15 @@
             return;
         } else if (!isDragging_MouseDown) {
             isSelectionInProgress = true;
+            //clearTextSelection();
+            setTimeout(()=>{
+                const container = containerNodeRef;
+                const selection = getWindow(container).getSelection();
+                //selection.collapse(selection.focusNode, selection.focusOffset)
+                //selection.collapse(selection.focusNode, selection.focusOffset)
+            }, 1000)
+            
+            
         }
     };
 
@@ -541,6 +568,21 @@
                 }
                 pdfHighlighterUtils.setTip(null);
             },
+            setCurrentHighlight: (hl) => {
+                currentHl = hl;
+            },
+            setCurrentHighlightIndex: (index) => {
+                currentHlIndex = index;
+            },
+
+            getTextSelectionDelay: () => {
+                //isSelectionInProgress = true;
+                return selectionDelay;
+            },
+            getSelectedTool: () => {
+                return selectedTool;
+            },
+
         };
 
     let enableTextSelection = $state(true);
@@ -655,6 +697,8 @@
 
     :global(.isSelectionInProgress .PdfHighlighter__highlight-layer) {
         z-index: -1;
+        pointer-events: none;
+        opacity: 0.7;
     }
 </style>
 
@@ -665,6 +709,21 @@
     onpointerdown={handleMouseDown}
     onpointerup={handleMouseUp}
     style={derived_style}
+    onselectstart={(e)=>{
+        //const container = containerNodeRef;
+        //const selection = getWindow(container).getSelection();
+        //selection.collapse(selection.focusNode, selection.focusOffset)
+
+        clearTextSelection(); //prevents setting selection anchor on textHighlight__part (firefox 136)
+
+        //It seems there is no quick and proper way to make highlighted text selectable without disabling pointer-events on the highlight div before onpointerdown event is triggered.
+        //Currently, after the onpointerdown event fires on highlight div, its pointer events are set to disabled, but the selection anchor's (which initially is set on dissappeared div) behavior is no longer defined. 
+        //This approach may work randomly, needs to be rewriten in the future.
+        //selectionDelay -1 to disable
+
+        //Text selection in area highlights works iff the page also contains one or more text highlights (chrome 132.0.6834.168).
+
+    }}
 >
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div 
@@ -701,6 +760,11 @@
             onReset={() => {
                 selectionRef = null;
                 disableTextSelection(viewerRef!, false);
+            }}
+            onMouseUp={()=>{
+                /*if (event.altKey) {
+                    selectedTool = 'text_selection';
+                }*/
             }}
             onSelection={(
                 viewportPosition,

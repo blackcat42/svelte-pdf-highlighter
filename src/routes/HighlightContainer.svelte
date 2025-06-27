@@ -22,6 +22,7 @@
         onContextMenu,
         onClick,
         pdfHighlighterUtils,
+        highlightMixBlendMode,
     }: HighlightContainerProps = $props();
     let contexts = getAllContexts();
 
@@ -52,6 +53,8 @@
                     onClick && onClick(event, highlight)
                 }
             }
+            {pdfHighlighterUtils}
+            {highlightMixBlendMode}
         />
     {:else}
         <AreaHighlight
@@ -77,6 +80,8 @@
             onClick = {(event) =>
                 onClick && onClick(event, highlight)
             }
+            {pdfHighlighterUtils}
+            {highlightMixBlendMode}
         />
     {/if}
 </MonitoredHighlightContainer>

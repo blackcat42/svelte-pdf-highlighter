@@ -134,6 +134,51 @@
         a_currentHighlights = getScaledHighlights(currentHighlights);
         //console.log('run HL effect, page:' + pageNumber);
     });
+
+    
+    const getCurrentHighlightsInOrder = (highlights) => {
+
+        //text highlights always on top
+        //let _hls_txt = [...highlights.filter((item)=>item.highlight.type === 'text')];
+        //let _hls_area = [...highlights.filter((item)=>item.highlight.type === 'area')];
+        //_hls_txt.sort((a, b) => a.highlight.z_index - b.highlight.z_index);
+        //_hls_area.sort((a, b) => a.highlight.z_index - b.highlight.z_index);
+        //return [..._hls_area,..._hls_txt];
+
+        highlights = highlights.toReversed();
+        highlights.sort((a, b) => a.highlight.z_index - b.highlight.z_index);
+        return highlights;
+
+        /*let _hls_txt = [...highlights.filter((item)=>item.highlight.type === 'text')].reverse();
+        let _hls_area = [...highlights.filter((item)=>item.highlight.type === 'area')].reverse();
+
+
+        const result = _hls_txt.reduceRight((accumulator, currentValue) => {
+            let item = accumulator.find(x => x.highlight.id === currentValue.highlight.parent_hl_id);
+            let index = accumulator.indexOf(item);
+            if (currentValue.highlight.parent_hl_id && index === -1) {
+                accumulator.splice(accumulator.length, 0, currentValue);
+            } else {
+                index = index !== -1 ? index + 1 : 0;
+                accumulator.splice(index, 0, currentValue);
+            }
+            return accumulator;
+        }, []);
+        const result2 = _hls_area.reduceRight((accumulator, currentValue) => {
+            let item = accumulator.find(x => x.highlight.id === currentValue.highlight.parent_hl_id);
+            let index = accumulator.indexOf(item);
+            if (currentValue.highlight.parent_hl_id && index === -1) {
+                accumulator.splice(accumulator.length, 0, currentValue);
+            } else {
+                index = index !== -1 ? index + 1 : 0;
+                accumulator.splice(index, 0, currentValue);
+            }
+            return accumulator;
+        }, []);
+
+        return [...result2,...result];*/
+    };
+
 </script>
 
 <style>
@@ -145,7 +190,7 @@
 
 {#key pdfHighlighterUtils.currentScale}
 <div>
-    {#each [...a_currentHighlights].reverse() as highlightUtils (highlightUtils.highlight.id)}
+    {#each getCurrentHighlightsInOrder(a_currentHighlights) as highlightUtils (highlightUtils.highlight.id)}
 
     <HighlightChildrenWrapper child_context={highlightUtils}>
         {@render children?.()}

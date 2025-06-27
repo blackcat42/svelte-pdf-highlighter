@@ -16,6 +16,10 @@
         onClick,
         //style,
         color = _color,
+        isAllowTextSelection,
+        allowTextSelection,
+        pdfHighlighterUtils,
+        highlight,
     }: RndProps = $props();
 
     interface RndProps {
@@ -53,6 +57,8 @@
     let removeMouseMoveListener = null;
 
     function onMouseDown(e) {
+        if (isAllowTextSelection) return;
+        allowTextSelection.cancel();
         e.stopPropagation();
         moving = true;
         //onEditStart();
@@ -158,6 +164,7 @@
         min-height: 10px;
         min-width: 10px;
     }
+
     .resizable {
         /*  background-color: palegoldenrod;*/
         position: absolute;
@@ -204,16 +211,33 @@
         bottom: -5px;
         cursor: nwse-resize;
     }
+    .allowSelect {
+        /*pointer-events: none;*/
+    }
 </style>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore slot_element_deprecated -->
-<section onmousedown={onMouseDown} style="{cssStringify(style, 'px')}; background-color: {color}" class="draggable resizable" >
-    <div class='resizers'>
+<div 
+    style="{cssStringify(style, 'px')}; background-color: {color}" 
+    class= {isAllowTextSelection ? 'resizable':'draggable resizable'} 
+    onmousedown={(e) => {
+        
+        if (!isAllowTextSelection) {
+            onMouseDown(e);
+            e.preventDefault(); 
+            e.stopPropagation();
+        } else {
+            pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+        }
+    }}
+    
+>
+    <div class= {isAllowTextSelection ? 'resizers allowSelect':'resizers'}>
     <div onmousedown = {(e)=>{e.stopPropagation(); e.preventDefault(); resizer_onMouseDown(e, 'nw')}} class='resizer top-left'></div>
     <div onmousedown = {(e)=>{e.stopPropagation(); e.preventDefault(); resizer_onMouseDown(e, 'ne')}} class='resizer top-right'></div>
     <div onmousedown = {(e)=>{e.stopPropagation(); e.preventDefault(); resizer_onMouseDown(e, 'sw')}} class='resizer bottom-left'></div>
     <div onmousedown = {(e)=>{e.stopPropagation(); e.preventDefault(); resizer_onMouseDown(e, 'se')}} class='resizer bottom-right'></div>
     </div>
     <slot></slot>
-</section>
+</div>

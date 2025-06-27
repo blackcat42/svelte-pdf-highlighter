@@ -8,6 +8,8 @@
         sidebarScrollToId: any;
         pdfHighlighterUtils: any;
         colors: Array<string>;
+        selectionDelay: number;
+        highlightMixBlendMode: string;
     }
 </script>
 
@@ -28,6 +30,8 @@
         sidebarScrollToId,
         pdfHighlighterUtils,
         colors,
+        selectionDelay = $bindable(),
+        highlightMixBlendMode = $bindable(),
     }: SidebarProps = $props();
 
     sidebarScrollToId((id) => {
@@ -260,10 +264,37 @@
         </p>
 
         <p>
+            Controls:<br>
+            <small>
+                Ctrl + Wheel: Zoom In/Out
+            </small><br>
             <small>
                 To create an area highlight hold ⌥ Option key (Alt), then click and drag.
-            </small>
-        </p>
+            </small><br>
+            <small>
+                To drag scroll in text selection mode, click on a blank space in the document and drag.
+            </small><br>
+            
+        </p> 
+        Settings:<br>
+        <small>Delay (in ms) before text in highlight becomes selactable (-1 to disable):</small> <br>
+        <input type="number" bind:value={selectionDelay} />
+        <br>
+        <small>Highlight's mix-blend-mode: </small> <br>
+        <select
+            bind:value={highlightMixBlendMode}
+        > 
+            <option value="normal">
+                normal
+            </option>
+            <option value="color">
+                color
+            </option>
+            <option value="difference">
+                difference
+            </option>
+    </select>
+        
     </div>
 
     {#if highlights}
@@ -324,7 +355,7 @@
                                 </div>
                             {/if}
                             <div class="highlight__location">
-                                Page {highlight.position.boundingRect.pageNumber}
+                                Page: {highlight.position.boundingRect.pageNumber}; z-index: {highlight.z_index}
                             </div>
                         </div>
                     </div>   

@@ -47,7 +47,7 @@
 
     let _highlights: Array<Highlight> = TEST_HIGHLIGHTS['https://arxiv.org/pdf/2203.11115'] ?? [];
     let highlightsStore = new HighlightsModel(_highlights);
-    //let unsubscribe = highlightsStore.subscribe((h)=>{
+    //let unsubscribe = highlightsStore.subscribe((array_of_all_highlights_including_new_or_updated)=>{
     //    //save data to server...
     //    if (true) return new Error('Failed to save highlights');
     //});
@@ -91,6 +91,8 @@
                 target: {
                     type: 'highlight',
                     deleteHighlight: () => highlightsStore.deleteHighlight(data),
+                    moveDown: () => highlightsStore.moveDown(data),
+                    moveUp: () => highlightsStore.moveUp(data),
                     //editComment: () => editComment(data),
                 },
             };
@@ -121,6 +123,7 @@
     let sidebarScrollToId: (id: string) => void;
 
     let pdfHighlighterUtils = $state({});
+    let selectionDelay = $state(1500); //-1 to disable
 
 
     // Scroll to highlight based on hash in the URL
@@ -139,6 +142,8 @@
 
     let resetHash = '';
     //console.log(url);
+
+    let highlightMixBlendMode = $state('normal');
 </script>
 
 <style>
@@ -162,9 +167,12 @@
         sidebarScrollToId = {(callback: (id: string) => void) => sidebarScrollToId = callback}
         {pdfHighlighterUtils}
         {colors}
+        bind:selectionDelay
+        bind:highlightMixBlendMode
     /> 
     <div style="height: 100vh; width: 75vw; overflow: hidden; position: relative; flexGrow: 1">
         <Toolbar
+            
              bind:selectedTool = {selectedTool}
              searchInPdf = {pdfHighlighterUtils.search}
              {pdfHighlighterUtils} />
@@ -193,9 +201,10 @@
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
                         onSearch = {(callback) => pdfHighlighterUtils.search = callback}
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
+                        bind:selectionDelay = {selectionDelay}
                     >
                         <HighlightContainer
-                            
+                            {highlightMixBlendMode}
                             editHighlight = {highlightsStore.editHighlight}
                             onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
                             onClick = {(e, data) => {
@@ -295,5 +304,17 @@
             if ((event.code === "KeyF" && event.getModifierState("Control")) || event.code === "F3") {
                 event.preventDefault();
             }
+            if (event.altKey) {
+                    event.preventDefault();
+                    selectedTool = 'area_selection';
+            }
+    }} 
+    
+    onkeyup={
+        (event) => {
+            if (event.key === 'Alt') {
+                    event.preventDefault();
+                    selectedTool = 'text_selection';
+                }
     }} 
 />

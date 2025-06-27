@@ -110,6 +110,7 @@ export interface Highlight {
     comment?: string;
     is_temp?: boolean;
     color?: string;
+    z_index?: number,
 }
 
 /**

@@ -40,12 +40,14 @@
          * Custom styling to be applied to the {@link AreaHighlight} component.
          */
         style?: any;
+        pdfHighlighterUtils: any;
+        highlightMixBlendMode?: string;
     }
 </script>
 
 <script lang="ts">
     //TODO: custom styling
-
+    import { debounce } from "$lib/utils.ts";
     //import { getPageFromElement } from '$lib/pdf_utils/pdfjs-dom.ts';
     import RND from '$lib/components/RND.svelte';
     import type { LTWHP, ViewportHighlight } from '$lib/types';
@@ -69,10 +71,19 @@
         onContextMenu,
         //onEditStart,
         style,
+        pdfHighlighterUtils,
+        highlightMixBlendMode = 'normal',
     }: AreaHighlightProps = $props();
     let highlightClass = $derived.by(() => (isScrolledTo ? 'AreaHighlight--scrolledTo' : ''));
 
     //`${highlight.position.boundingRect.width}${highlight.position.boundingRect.height}${highlight.position.boundingRect.left}${highlight.position.boundingRect.top}`;
+
+    let isAllowTextSelection = $state(false);
+    let delay = $derived.by(()=>pdfHighlighterUtils.getTextSelectionDelay());
+    const allowTextSelection = debounce(() => {
+        if (delay < 0) return;
+        isAllowTextSelection = true;
+    }, pdfHighlighterUtils.getTextSelectionDelay);
 </script>
 
 <style>
@@ -86,13 +97,37 @@
     .AreaHighlight--scrolledTo .AreaHighlight__part {
         background: #ff4141;
     }
+    .allowSelect {
+        cursor: text;
+        opacity: 0.8;
+        user-select: text;
+    }
 </style>
 
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="AreaHighlight {highlightClass}" oncontextmenu={onContextMenu} >
+<div  oncontextmenu={onContextMenu}  style="mix-blend-mode: {highlightMixBlendMode}"
+    class= {isAllowTextSelection ? 'AreaHighlight allowSelect':'AreaHighlight'}
+    onmouseenter={() => {
+        //pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+        if (pdfHighlighterUtils.getSelectedTool() === 'text_selection') {
+            //delay = parseInt(pdfHighlighterUtils.getTextSelectionDelay());
+            allowTextSelection();
+        }
+                          
+    }}
+    onmouseleave={() => {
+        allowTextSelection.cancel();
+        isAllowTextSelection = false;
+        //pdfHighlighterUtils.setCurrentHighlight(null);
+    }}
+>
     {#key highlight.position.boundingRect}
         <RND
+            {highlight}
+            {pdfHighlighterUtils}
+            {isAllowTextSelection}
+            {allowTextSelection}
             boundingRect = {highlight.position.boundingRect}
             onDragOrResizeStop={(data) => {
               const boundingRect: LTWHP = {
@@ -108,10 +143,6 @@
               //tipContainerState.tip.position = {boundingRect};
             }}
             bounds={bounds}
-            onClick={(event: Event) => {
-                event.stopPropagation();
-                event.preventDefault();
-            }}
             color={highlight.color}
         ></RND>
     {/key}

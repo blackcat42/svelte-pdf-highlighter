@@ -87,5 +87,7 @@
 {:else if target.type == 'highlight'}
     <div class="context-menu" style="top: {yPos + 2}px; left: {xPos + 2}px">
         <button onclick={target.deleteHighlight}>Delete</button>
+        <button onclick={target.moveDown}>move down</button>
+        <button onclick={target.moveUp}>move up</button>
     </div>
 {/if}

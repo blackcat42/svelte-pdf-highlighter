@@ -59,6 +59,19 @@ export class HighlightsModel<T extends Highlight> {
         });
     };
 
+    public moveDown = (highlight: T | ViewportHighlight) => {
+        console.log('Move highlight', highlight);
+        if ((typeof highlight.z_index) !== 'number') highlight.z_index = 0;
+        highlight.z_index = highlight.z_index - 1;
+        this.editHighlight(highlight.id, {z_index: highlight.z_index} as Partial<T>);
+    };
+    public moveUp = (highlight: T | ViewportHighlight) => {
+        console.log('Move highlight', highlight);
+        if ((typeof highlight.z_index) !== 'number') highlight.z_index = 0;
+        highlight.z_index = highlight.z_index + 1;
+        this.editHighlight(highlight.id, {z_index: highlight.z_index} as Partial<T>);
+    };
+
     public resetHighlights = () => {
         this.highlights = [];
     };

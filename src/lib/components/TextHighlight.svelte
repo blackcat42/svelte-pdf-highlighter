@@ -48,12 +48,14 @@
          * Optional CSS styling applied to each TextHighlight part.
          */
         style?: any;
+        pdfHighlighterUtils: any;
+        highlightMixBlendMode?: string;
     }
 </script>
 
 <script lang="ts">
     //import React, { CSSProperties, MouseEvent } from "react";
-
+    import { debounce } from "$lib/utils.ts";
     import type { ViewportHighlight } from '$lib/types';
     import { getContext } from 'svelte';
 
@@ -69,6 +71,8 @@
         isScrolledTo,
         onContextMenu,
         style,
+        pdfHighlighterUtils,
+        highlightMixBlendMode = 'normal',
     }: TextHighlightProps = $props();
     let highlightClass = $derived.by(() => (isScrolledTo ? 'TextHighlight--scrolledTo' : ''));
     const { rects } = highlight.position;
@@ -76,6 +80,15 @@
     const _color = getContext('colors') ? getContext('colors')[0] : 'yellow';
 
     //style={{ ...rect, ...style }}
+
+    let isAllowTextSelection = $state(false);
+    let delay = $derived.by(()=>pdfHighlighterUtils.getTextSelectionDelay());
+    const allowTextSelection = debounce(() => {
+        //console.log(delay)
+        //if (!pdfHighlighterUtils.isAllowTextSelectionInHl()) return;
+        if (delay < 0) return;
+        isAllowTextSelection = true;
+    }, pdfHighlighterUtils.getTextSelectionDelay);
 </script>
 
 <style>
@@ -92,6 +105,7 @@
         position: absolute;
         background: rgba(255, 226, 143, 1);
         transition: background 0.3s;
+        
     }
 
     .TextHighlight--scrolledTo .TextHighlight__part {
@@ -103,15 +117,38 @@
 <div
     class="TextHighlight {highlightClass}"
     oncontextmenu={onContextMenu}
+
+    onmouseenter={() => {
+        //pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+        if (pdfHighlighterUtils.getSelectedTool() === 'text_selection') {
+            //delay = parseInt(pdfHighlighterUtils.getTextSelectionDelay());
+            allowTextSelection();
+        }
+    }}
+    onmouseleave={() => {
+        allowTextSelection.cancel();
+        isAllowTextSelection = false;
+        //pdfHighlighterUtils.setCurrentHighlight(null);
+    }}
 >
     <div class="TextHighlight__parts">
         {#each rects as rect, index}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
-                onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
+
+                onpointerdown={(e) => {
+                    if (!isAllowTextSelection) {
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                    } else {
+                        pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+                        if ((typeof highlight.z_index) !== 'number') highlight.z_index = 0;
+                        pdfHighlighterUtils.setCurrentHighlightIndex(highlight.z_index);
+                    }
+                }}
                 onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}}
                 onclick={(e) => {e.preventDefault(); e.stopPropagation(); onClick(e)}}
-                style="width:{rect.width}px; height: {rect.height}px; left: {rect.left}px; top: {rect.top}px; background: {highlight.color ? highlight.color : _color}"
+                style="width:{rect.width}px; height: {rect.height}px; left: {rect.left}px; top: {rect.top}px; background: {highlight.color ? highlight.color : _color}; cursor: {isAllowTextSelection ? 'text' : 'pointer'}; opacity: {isAllowTextSelection ? '0.8' : '1'}; mix-blend-mode: {highlightMixBlendMode};"
                 class="TextHighlight__part"
             ></div>
         {/each}
