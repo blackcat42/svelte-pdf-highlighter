@@ -144,6 +144,7 @@
     //console.log(url);
 
     let highlightMixBlendMode = $state('normal');
+    let sidebarVisible = $state(true);
 </script>
 
 <style>
@@ -154,10 +155,20 @@
         background-color: #ffffff;
         color: #333333;
     }
+    :global(.PdfHighlighter) {
+        background-color: #DEE2E6;
+    }
 </style>
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="App" style="display: flex; height: 100vh;">
+<Toolbar  
+    bind:selectedTool = {selectedTool}
+    searchInPdf = {pdfHighlighterUtils.search}
+    {pdfHighlighterUtils} 
+    bind:sidebarVisible
+/>
+<div class="App" style="display: flex; height: calc(100vh - 2.1rem);">
+    {#if (sidebarVisible)}
     <Sidebar
         bind:highlights={highlightsStore.highlights}
         resetHighlights={highlightsStore.resetHighlights}
@@ -170,12 +181,9 @@
         bind:selectionDelay
         bind:highlightMixBlendMode
     /> 
-    <div style="height: 100vh; width: 75vw; overflow: hidden; position: relative; flexGrow: 1">
-        <Toolbar
-            
-             bind:selectedTool = {selectedTool}
-             searchInPdf = {pdfHighlighterUtils.search}
-             {pdfHighlighterUtils} />
+    {/if}
+    <div style="height: 100%; width: 100%; overflow: hidden; position: relative; flexGrow: 1">
+        
 
         {#if workerUrl !== null}         
             <PdfLoader document={url} workerSrc={workerUrl}>
@@ -197,7 +205,7 @@
                         bind:highlightsStore
                         bind:selectedTool 
                         pdfDocument={pdfDocumentRef}
-                        style="height: calc(100% - 41px)"
+                        style="height: 100%; padding-top: 0.7rem;"
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
                         onSearch = {(callback) => pdfHighlighterUtils.search = callback}
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}

@@ -198,7 +198,7 @@
                     removePageBorders: true,
                     linkService: linkServiceRef,
                     findController: findController_instance,
-                    annotationMode: 0,
+                    annotationMode: 1,
                 }));
 
             viewerRef.setDocument(pdfDocument as any);
@@ -629,7 +629,6 @@
         overflow: auto;
         width: 100%;
         height: 100%;
-        background-color: #333;
     }
 
     /* Style the scrollbar */

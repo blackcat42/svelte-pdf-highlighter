@@ -252,7 +252,7 @@
     }
 </style>
 
-<div class="sidebar" style="width: 25vw; maxWidth: 500px">
+<div class="sidebar" style="width: 31vw; maxWidth: 500px">
     <div class="description" style="padding: 1rem">
         <h2 style="marginBottom: 1rem">
             svelte-pdf-highlighter {APP_VERSION}
