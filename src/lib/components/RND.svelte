@@ -1,38 +1,37 @@
 <script lang="ts">
     import { cssStringify } from '$lib/utils';
-    import { onMount, getContext } from 'svelte';
+    import type { Debounced } from '$lib/utils';
+    import { getContext } from 'svelte';
     import { on } from 'svelte/events';
+    import type { ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils, LTWH, LTWHP } from '$lib/types';
 
     const _color = getContext('colors') ? getContext('colors')[0] : 'yellow';
     let {
         boundingRect,
         onDragOrResizeStop,
-        //onResizeStop,
-        //onDragStart,
-        //onResizeStart,
-        //onEditStart,
-        //default,
         bounds,
-        onClick,
         //style,
         color = _color,
         isAllowTextSelection,
         allowTextSelection,
         pdfHighlighterUtils,
         highlight,
+        onClick,
+        isDraggable,
     }: RndProps = $props();
 
     interface RndProps {
-        boundingRect: any;
-        onDragOrResizeStop: any;
-        //onResizeStop?: any;
-        //onDragStart?: any;
-        //onResizeStart?: any;
-        //onEditStart: any;
-        onClick: any;
+        boundingRect: LTWHP;
+        onDragOrResizeStop?: (data: LTWH)=>void;
         bounds?: Element;
         color: string;
-        //style?: any;
+        highlight: ViewportHighlight;
+        pdfHighlighterUtils: TPdfHighlighterUtils;
+        isAllowTextSelection: boolean;
+        allowTextSelection: Debounced;
+        //style?: string;
+        onClick?(event: MouseEvent): void;
+        isDraggable: boolean;
     }
 
     let bounds_rect = bounds.getBoundingClientRect();
@@ -64,17 +63,13 @@
         //onEditStart();
         removeMouseUpListener = on(document, 'mouseup', onMouseUp);
         removeMouseMoveListener = on(document, 'mousemove', onMouseMove);
-        //document.addEventListener('mouseup', onMouseUp);
-        //document.addEventListener('mousemove', onMouseMove);
         bounds_rect = bounds.getBoundingClientRect();
     }
 
     function resizer_onMouseDown(e, d) {
         //e.stopPropagation();
         removeMouseUpListener = on(document, 'mouseup', onMouseUp);
-        //document.addEventListener('mouseup', onMouseUp);
         removeMouseMoveListener = on(document, 'mousemove', onMouseMove);
-        //document.addEventListener('mousemove', onMouseMove);
         resizing = true;
         resizing_direction = d;
         bounds_rect = bounds.getBoundingClientRect();
@@ -140,11 +135,8 @@
         if (!moving && !resizing) return;
         removeMouseUpListener();
         removeMouseMoveListener();
-        //document.removeEventListener('mouseup', onMouseUp);
-        //document.removeEventListener('mousemove', onMouseMove);
         moving = false;
         resizing = false;
-
         onDragOrResizeStop(style);
     }
 
@@ -167,6 +159,8 @@
 
     .resizable {
         /*  background-color: palegoldenrod;*/
+        user-select: none;
+        cursor: pointer;
         position: absolute;
     }
 
@@ -179,8 +173,8 @@
     }
 
     .resizable .resizers .resizer {
-        width: 10px;
-        height: 10px;
+        width: 5px;
+        height: 5px;
         /*border-radius: 50%;*/
         background: transparent;
         /*border: 1px solid #000;*/
@@ -189,7 +183,7 @@
     }
     .resizable:hover .resizers .resizer {
         border: 1px solid #000;
-        background: grey;
+        background: #fff;
     }
     .resizable .resizers .resizer.top-left {
         left: -5px;
@@ -213,17 +207,20 @@
     }
     .allowSelect {
         /*pointer-events: none;*/
+        user-select: text !important;
+        cursor: text !important;
     }
 </style>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore slot_element_deprecated -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div 
     style="{cssStringify(style, 'px')}; background-color: {color}" 
-    class= {isAllowTextSelection ? 'resizable':'draggable resizable'} 
+    class= {(!isAllowTextSelection && isDraggable) ? 'draggable resizable':'resizable'} 
     onmousedown={(e) => {
-        
-        if (!isAllowTextSelection) {
+        onClick(e);
+        if (!isAllowTextSelection && isDraggable) {
             onMouseDown(e);
             e.preventDefault(); 
             e.stopPropagation();
@@ -231,7 +228,6 @@
             pdfHighlighterUtils.setCurrentHighlight(highlight.id);
         }
     }}
-    
 >
     <div class= {isAllowTextSelection ? 'resizers allowSelect':'resizers'}>
     <div onmousedown = {(e)=>{e.stopPropagation(); e.preventDefault(); resizer_onMouseDown(e, 'nw')}} class='resizer top-left'></div>

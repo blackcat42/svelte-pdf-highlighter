@@ -15,6 +15,7 @@
         ) => void;
         onClick?: any;
         pdfHighlighterUtils: any;
+        highlightMixBlendMode: string;
     }
 
     let {
@@ -30,7 +31,7 @@
     let { highlight, viewportToScaled, screenshot, isScrolledTo, highlightBindings }: any =
         getContext('highlightUtils'); //HighlightContext
 
-    const { toggleEditInProgress } = pdfHighlighterUtils; //usePdfHighlighterContext();
+    //const { toggleEditInProgress } = pdfHighlighterUtils; //usePdfHighlighterContext();
     let highlightTip: Tip = $state({
         position: highlight.position,
         content: { highlight },
@@ -71,7 +72,7 @@
                     },
                 };
                 editHighlight(highlight.id, edit);
-                toggleEditInProgress(false);
+                //toggleEditInProgress(false);
             }}
             bounds={highlightBindings.textLayer}
             onContextMenu={(event) =>
@@ -82,6 +83,7 @@
             }
             {pdfHighlighterUtils}
             {highlightMixBlendMode}
+            isDraggable = {false}
         />
     {/if}
 </MonitoredHighlightContainer>

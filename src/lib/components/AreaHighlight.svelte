@@ -6,6 +6,13 @@
         highlight: ViewportHighlight;
 
         /**
+         * Callback triggered whenever the user clicks on the part of a highlight.
+         *
+         * @param event - Mouse event associated with click.
+         */
+        onClick?(event: MouseEvent): void;
+
+        /**
          * A callback triggered whenever the highlight area is either finished
          * being moved or resized.
          *
@@ -14,6 +21,7 @@
         onChange?(rect: LTWHP): void;
 
         /**
+         * TODO:
          * Has the highlight been auto-scrolled into view? By default, this will render the highlight red.
          */
         isScrolledTo?: boolean;
@@ -37,20 +45,22 @@
         //onEditStart?(): void;
 
         /**
+         * TODO:
          * Custom styling to be applied to the {@link AreaHighlight} component.
          */
         style?: any;
-        pdfHighlighterUtils: any;
+
+        pdfHighlighterUtils: TPdfHighlighterUtils;
         highlightMixBlendMode?: string;
+        isDraggable: boolean;
     }
 </script>
 
 <script lang="ts">
-    //TODO: custom styling
+    //TODO: custom styling, isScrolledTo
     import { debounce } from "$lib/utils.ts";
-    //import { getPageFromElement } from '$lib/pdf_utils/pdfjs-dom.ts';
     import RND from '$lib/components/RND.svelte';
-    import type { LTWHP, ViewportHighlight } from '$lib/types';
+    import type { LTWHP, LTWH, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils } from '$lib/types';
 
     /**
      * The props type for {@link AreaHighlight}.
@@ -73,10 +83,10 @@
         style,
         pdfHighlighterUtils,
         highlightMixBlendMode = 'normal',
+        onClick,
+        isDraggable,
     }: AreaHighlightProps = $props();
     let highlightClass = $derived.by(() => (isScrolledTo ? 'AreaHighlight--scrolledTo' : ''));
-
-    //`${highlight.position.boundingRect.width}${highlight.position.boundingRect.height}${highlight.position.boundingRect.left}${highlight.position.boundingRect.top}`;
 
     let isAllowTextSelection = $state(false);
     let delay = $derived.by(()=>pdfHighlighterUtils.getTextSelectionDelay());
@@ -129,21 +139,23 @@
             {isAllowTextSelection}
             {allowTextSelection}
             boundingRect = {highlight.position.boundingRect}
-            onDragOrResizeStop={(data) => {
-              const boundingRect: LTWHP = {
-                ...highlight.position.boundingRect,
-                top: data.top,
-                left: data.left,
-                width: data.width,
-                height: data.height,
-                //pageNumber: getPageFromElement(ref)?.number || -1,
-            };
+            onDragOrResizeStop={(data: LTWH) => {
+                const boundingRect: LTWHP = {
+                    ...highlight.position.boundingRect,
+                    top: data.top,
+                    left: data.left,
+                    width: data.width,
+                    height: data.height,
+                    //pageNumber: getPageFromElement(ref)?.number || -1,
+                };
 
               onChange && onChange(boundingRect);
               //tipContainerState.tip.position = {boundingRect};
             }}
             bounds={bounds}
             color={highlight.color}
+            {onClick}
+            {isDraggable}
         ></RND>
     {/key}
 </div>
