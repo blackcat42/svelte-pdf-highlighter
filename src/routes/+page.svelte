@@ -16,6 +16,7 @@
         CommentedHighlight,
         Tip,
         PdfScaleValue,
+        PdfHighlighterUtils as TPdfHighlighterUtils,
     } from '$lib/types.ts';
 
     import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api.d.ts';
@@ -32,7 +33,9 @@
     //};
 
     let colors = setContext('colors', ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe']);
+    let scrolled_to_color: string|false|null = setContext('scrolledTo_color', 'red');
     let url: string | URL | DocumentInitParameters = $state('https://arxiv.org/pdf/2203.11115');
+    //let url: string | URL | DocumentInitParameters = $state('2203.11115v1.pdf');
     setContext('document', url);
     //document: string | URL | TypedArray | DocumentInitParameters;
 
@@ -55,7 +58,7 @@
     let contextMenu: ContextMenuProps | null = $state(null);
 
     type tool = 'text_selection' | 'hand' | 'highlight_pen' | 'area_selection';
-    let selectedTool: tool = $state('text_selection');
+
 
     let workerUrl: string | null = $state(null);
      (async () => {
@@ -103,18 +106,18 @@
                 target: {
                     type: 'document',
                     enableTextSelection: () => {
-                        selectedTool = 'text_selection';
+                        pdfHighlighterUtils.selectedTool = 'text_selection';
                     },
                     enableDragScroll: () => {
-                        selectedTool = 'hand';
+                        pdfHighlighterUtils.selectedTool = 'hand';
                     },
                     enableHighlightPen: () => {
-                        selectedTool = 'highlight_pen';
+                        pdfHighlighterUtils.selectedTool = 'highlight_pen';
                     },
                     enableAreaSelection: () => {
-                        selectedTool = 'area_selection';
+                        pdfHighlighterUtils.selectedTool = 'area_selection';
                     },
-                    selectedTool,
+                    //pdfHighlighterUtils.selectedTool,
                 },
             };
         }
@@ -122,8 +125,10 @@
 
     let sidebarScrollToId: (id: string) => void;
 
-    let pdfHighlighterUtils = $state({});
-    let selectionDelay = $state(1500); //-1 to disable
+    let pdfHighlighterUtils: Partial<TPdfHighlighterUtils> = $state({
+        textSelectionDelay: 1500,
+        selectedColor: colors[0],
+    });
 
 
     // Scroll to highlight based on hash in the URL
@@ -158,14 +163,17 @@
     :global(.PdfHighlighter) {
         background-color: #DEE2E6;
     }
+    :global(.TextHighlight--scrolledTo .TextHighlight__part) {
+        background: #b5b5b5 !important;
+    }
 </style>
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <Toolbar  
-    bind:selectedTool = {selectedTool}
     searchInPdf = {pdfHighlighterUtils.search}
-    {pdfHighlighterUtils} 
+    bind:pdfHighlighterUtils = {pdfHighlighterUtils}
     bind:sidebarVisible
+    {colors}
 />
 <div class="App" style="display: flex; height: calc(100vh - 2.1rem);">
     {#if (sidebarVisible)}
@@ -176,9 +184,8 @@
         editHighlight = {highlightsStore.editHighlight}
         deleteHighlight = {highlightsStore.deleteHighlight}
         sidebarScrollToId = {(callback: (id: string) => void) => sidebarScrollToId = callback}
-        {pdfHighlighterUtils}
+        bind:pdfHighlighterUtils = {pdfHighlighterUtils}
         {colors}
-        bind:selectionDelay
         bind:highlightMixBlendMode
     /> 
     {/if}
@@ -203,13 +210,10 @@
                 {#snippet pdfHighlighterWrapper(pdfDocumentRef)}
                     <PdfHighlighter
                         bind:highlightsStore
-                        bind:selectedTool 
                         pdfDocument={pdfDocumentRef}
-                        style="height: 100%; padding-top: 0.7rem;"
+                        style="height: 100%;"
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
-                        onSearch = {(callback) => pdfHighlighterUtils.search = callback}
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
-                        bind:selectionDelay = {selectionDelay}
                     >
                         <HighlightContainer
                             {highlightMixBlendMode}
@@ -314,7 +318,7 @@
             }
             if (event.altKey) {
                     event.preventDefault();
-                    selectedTool = 'area_selection';
+                    pdfHighlighterUtils.selectedTool = 'area_selection';
             }
     }} 
     
@@ -322,7 +326,7 @@
         (event) => {
             if (event.key === 'Alt') {
                     event.preventDefault();
-                    selectedTool = 'text_selection';
+                    pdfHighlighterUtils.selectedTool = 'text_selection';
                 }
     }} 
 />

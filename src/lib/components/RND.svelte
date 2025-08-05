@@ -26,7 +26,7 @@
         bounds?: Element;
         color: string;
         highlight: ViewportHighlight;
-        pdfHighlighterUtils: TPdfHighlighterUtils;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         isAllowTextSelection: boolean;
         allowTextSelection: Debounced;
         //style?: string;
@@ -144,6 +144,7 @@
         return () => {
         };
     });*/
+    const scrolledToColor = getContext('scrolledTo_color');
 </script>
 
 <style>
@@ -210,14 +211,21 @@
         user-select: text !important;
         cursor: text !important;
     }
+
+    .AreaHighlight {
+        transition: background 1s;
+    }
+    .AreaHighlight--scrolledTo {
+        transition: none;
+    }
 </style>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore slot_element_deprecated -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div 
-    style="{cssStringify(style, 'px')}; background-color: {color}" 
-    class= {(!isAllowTextSelection && isDraggable) ? 'draggable resizable':'resizable'} 
+    style="{cssStringify(style, 'px')}; background: {(pdfHighlighterUtils.scrolledToHighlightIdRef === highlight.id && scrolledToColor) ? scrolledToColor : color};" 
+    class= "{(!isAllowTextSelection && isDraggable) ? 'draggable resizable':'resizable'} {(pdfHighlighterUtils.scrolledToHighlightIdRef === highlight.id) ? 'AreaHighlight--scrolledTo' : 'AreaHighlight'}"
     onmousedown={(e) => {
         onClick(e);
         if (!isAllowTextSelection && isDraggable) {
@@ -225,7 +233,7 @@
             e.preventDefault(); 
             e.stopPropagation();
         } else {
-            pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+            pdfHighlighterUtils.setCurrentHighlightId(highlight.id);
         }
     }}
 >

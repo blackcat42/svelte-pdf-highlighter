@@ -48,13 +48,14 @@ export class HighlightsModel<T extends Highlight> {
     public deleteHighlight = (highlight: T | ViewportHighlight) => {
         console.log('Deleting highlight', highlight);
         this.highlights = this.highlights.filter((item) => {
-            if (item.id === highlight.id && item.comment && item?.comment?.length > 3) {
+            //TODO:
+            /*if (item.id === highlight.id && item.comment && item?.comment?.length > 3) {
                 return !confirm(
                     'are you sure, you want to delete highlight along with this comment: "' +
                         item.comment +
                         '"?',
                 );
-            }
+            }*/
             return item.id !== highlight.id;
         });
     };

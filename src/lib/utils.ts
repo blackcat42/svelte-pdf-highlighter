@@ -18,7 +18,7 @@ export function cssStringify(obj: Object, postfix: string): string {
 }
 
 
-type Debounced = {(...args: unknown[]): any, cancel: ()=> void};
+export type Debounced = {(...args: unknown[]): any, cancel: ()=> void};
 export function debounce(func: (...args: unknown[]) => unknown, _timeout: number): Debounced;
 export function debounce(func: (...args: unknown[]) => unknown, _timeout: () => number): Debounced;
 export function debounce(func, _timeout) {

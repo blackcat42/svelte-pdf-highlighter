@@ -35,7 +35,7 @@
          * Indicates whether the component is autoscrolled into view, affecting
          * default theming.
          */
-        isScrolledTo: boolean;
+        //isScrolledTo: boolean;
 
         /**
          * Callback triggered whenever the user tries to open context menu on highlight.
@@ -48,15 +48,15 @@
          * Optional CSS styling applied to each TextHighlight part.
          */
         style?: any;
-        pdfHighlighterUtils: any;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         highlightMixBlendMode?: string;
     }
 </script>
 
 <script lang="ts">
-    //import React, { CSSProperties, MouseEvent } from "react";
+    //TODO: DRY?
     import { debounce } from "$lib/utils.ts";
-    import type { ViewportHighlight } from '$lib/types';
+    import type { ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils} from '$lib/types';
     import { getContext } from 'svelte';
 
     
@@ -68,27 +68,32 @@
     let {
         highlight,
         onClick,
-        isScrolledTo,
         onContextMenu,
         style,
         pdfHighlighterUtils,
         highlightMixBlendMode = 'normal',
     }: TextHighlightProps = $props();
-    let highlightClass = $derived.by(() => (isScrolledTo ? 'TextHighlight--scrolledTo' : ''));
+    
     const { rects } = highlight.position;
 
-    const _color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+    let color: string = $state('');
+    const scrolledToColor = getContext('scrolledTo_color');
+    if (highlight.color) {
+        color = highlight.color
+    } else {
+        color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+    }
 
     //style={{ ...rect, ...style }}
 
     let isAllowTextSelection = $state(false);
-    let delay = $derived.by(()=>pdfHighlighterUtils.getTextSelectionDelay());
+    let delay = pdfHighlighterUtils.textSelectionDelay;
     const allowTextSelection = debounce(() => {
         //console.log(delay)
         //if (!pdfHighlighterUtils.isAllowTextSelectionInHl()) return;
         if (delay < 0) return;
         isAllowTextSelection = true;
-    }, pdfHighlighterUtils.getTextSelectionDelay);
+    }, () => pdfHighlighterUtils.textSelectionDelay);
 </script>
 
 <style>
@@ -104,23 +109,21 @@
         cursor: pointer;
         position: absolute;
         background: rgba(255, 226, 143, 1);
-        transition: background 0.3s;
-        
+        transition: background 1s;
     }
-
-    .TextHighlight--scrolledTo .TextHighlight__part {
-        background: #ff4141;
+    .TextHighlight__part--scrolledTo {
+        transition: none;
     }
 </style>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class="TextHighlight {highlightClass}"
+    class="TextHighlight"
     oncontextmenu={onContextMenu}
 
     onmouseenter={() => {
-        //pdfHighlighterUtils.setCurrentHighlight(highlight.id);
-        if (pdfHighlighterUtils.getSelectedTool() === 'text_selection') {
+        //pdfHighlighterUtils.setCurrentHighlightId(highlight.id);
+        if (pdfHighlighterUtils.selectedTool === 'text_selection') {
             //delay = parseInt(pdfHighlighterUtils.getTextSelectionDelay());
             allowTextSelection();
         }
@@ -128,7 +131,7 @@
     onmouseleave={() => {
         allowTextSelection.cancel();
         isAllowTextSelection = false;
-        //pdfHighlighterUtils.setCurrentHighlight(null);
+        //pdfHighlighterUtils.setCurrentHighlightId(null);
     }}
 >
     <div class="TextHighlight__parts">
@@ -141,15 +144,15 @@
                         e.preventDefault(); 
                         e.stopPropagation();
                     } else {
-                        pdfHighlighterUtils.setCurrentHighlight(highlight.id);
+                        pdfHighlighterUtils.setCurrentHighlightId(highlight.id);
                         if ((typeof highlight.z_index) !== 'number') highlight.z_index = 0;
-                        pdfHighlighterUtils.setCurrentHighlightIndex(highlight.z_index);
+                        pdfHighlighterUtils.setCurrentHighlightZIndex(highlight.z_index);
                     }
                 }}
                 onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}}
                 onclick={(e) => {e.preventDefault(); e.stopPropagation(); onClick(e)}}
-                style="width:{rect.width}px; height: {rect.height}px; left: {rect.left}px; top: {rect.top}px; background: {highlight.color ? highlight.color : _color}; cursor: {isAllowTextSelection ? 'text' : 'pointer'}; opacity: {isAllowTextSelection ? '0.8' : '1'}; mix-blend-mode: {highlightMixBlendMode};"
-                class="TextHighlight__part"
+                style="width:{rect.width}px; height: {rect.height}px; left: {rect.left}px; top: {rect.top}px; background: {(pdfHighlighterUtils.scrolledToHighlightIdRef === highlight.id && scrolledToColor) ? scrolledToColor : color}; cursor: {isAllowTextSelection ? 'text' : 'pointer'}; opacity: {isAllowTextSelection ? '0.8' : '1'}; mix-blend-mode: {highlightMixBlendMode};"
+                class="{(pdfHighlighterUtils.scrolledToHighlightIdRef === highlight.id) ? 'TextHighlight__part--scrolledTo' : ''} TextHighlight__part"
             ></div>
         {/each}
     </div>

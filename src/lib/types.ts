@@ -106,11 +106,12 @@ export interface Highlight {
      * to render, please use {@link type}.
      */
     content?: Content;
-    position: ScaledPosition;
+    position?: ScaledPosition;
     comment?: string;
     is_temp?: boolean;
     color?: string;
     z_index?: number,
+    parent_hl_id?: string;
 }
 
 /**
@@ -201,4 +202,49 @@ export type SearchOptions = {
     entireWord?: boolean;
     highlightAll?: boolean;
     findPrevious?: boolean;
+};
+
+type PageLayout = {
+    spreadMode?: number; 
+    scrollMode?: number; 
+    pagesRotation?: number;
+}
+
+type SearchState = {
+    matchesCount: {current?: number, total?: number};
+}
+
+export type PdfHighlighterUtils = {
+    isSelectionInProgress(): boolean;
+    scrollToHighlight(highlight: Highlight): void;
+    scrolledToHighlightIdRef?: string|null;
+    /** Represents scale as a number */
+    currentScale: number;
+    currentScaleValue: string|number;
+    setCurrentScaleValue(value: PdfScaleValue): void;
+    setCurrentHighlightId(highlight_id: string): void;
+    setCurrentHighlightZIndex(index: number): void;
+
+    setTip(f: any): any;
+
+    selectedTool: string;
+    selectedColor: string;
+    search: any;
+
+    searchState: SearchState;
+    setSearchState: (state: SearchState) => void;
+    getSearchState: () => SearchState;
+    pageLayout: PageLayout;
+    setPageLayout: (opts: PageLayout) => void;
+    textSelectionDelay: number;
+};
+
+export type TipContainerState = {
+    show: boolean;
+    pinned: boolean;
+    highlight: Highlight|null;
+    position: ViewportPosition|null;
+    addHighlight: (hl: Highlight) => Highlight;
+    clearSelection: () => void;
+    tip?: any;
 };

@@ -46,10 +46,9 @@
         /**
          * Condition to check before any mouse selection starts.
          *
-         * @param event - mouse event associated with the new selection.
          * @returns - `True` if mouse selection should start.
          */
-        enableAreaSelection(event: MouseEvent): boolean;
+        enableAreaSelection: boolean;
 
         /**
          * Callback whenever the mouse selection area changes.
@@ -62,6 +61,7 @@
          * Optional style props for the mouse selection rectangle.
          */
         style?: any; //CSSProperties;
+        onMouseUp?(event: MouseEvent): void;
     }
 </script>
 
@@ -137,7 +137,7 @@
     const handleMouseUp = (event: MouseEvent) => {
         if (!mouseDown) return;
         mouseDown = false;
-        onMouseUp();
+        onMouseUp(event);
         if (Boolean(asElement(event.target).closest('.AreaHighlight'))) return;
         if (!start || !end || !startTargetRef) return;
 
@@ -182,7 +182,7 @@
         if (Boolean(asElement(event.target).closest('.AreaHighlight'))) return;
         mouseDown = true;
         const shouldStart = (event: MouseEvent) =>
-            enableAreaSelection(event) &&
+            enableAreaSelection &&
             isHTMLElement(event.target) &&
             Boolean(asElement(event.target).closest('.page'));
 

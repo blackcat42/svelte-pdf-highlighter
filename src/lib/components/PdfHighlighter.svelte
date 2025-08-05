@@ -5,14 +5,12 @@
      * @category Component Properties
      * @internal
      */
-    import type { PdfScaleValue } from '$lib/types';
     import type { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
     import type { Snippet } from 'svelte';
     import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
     export interface pdfHighlighterProps {
-        highlightsStore: HighlightsModel;
-        selectedTool: string;
+        highlightsStore: HighlightsModel<any>;
         pdfDocument: PDFDocumentProxy;
         children: Snippet;
         highlightPopup?: Snippet;
@@ -20,11 +18,7 @@
         newHighlightPopup?: Snippet;
         style: string;
         onContextMenu: (e: MouseEvent) => void;
-        //onTipUpdate(callback: (...args: any[]) => void): void;
-        onSearch(callback: (options: SearchOptions) => void): void;
-        //setPdfHighlighterUtils(...args: any[]): void;
-        pdfHighlighterUtils: any;
-        selectionDelay: number;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
     }
 </script>
 
@@ -36,10 +30,13 @@
         Highlight,
         HighlightBindings,
         //PdfSelection,
-        Tip,
+        //Tip,
         SearchOptions,
         ViewportPosition,
         Content,
+        PdfHighlighterUtils as TPdfHighlighterUtils,
+        TipContainerState as TTipContainerState,
+        PdfScaleValue,
     } from '$lib/types';
 
     import {
@@ -63,6 +60,7 @@
         PDFViewer as TPDFViewer,
         PDFFindController as TPDFFindController,
     } from 'pdfjs-dist/web/pdf_viewer.mjs';
+    import { debounce } from '$lib/utils';
 
     type PointerEventHandler = (event?: PointerEvent & { currentTarget: EventTarget & HTMLElement }) => void;
     let pdfViewerReady = false;
@@ -91,58 +89,34 @@
         viewer.viewer?.classList.toggle('PdfHighlighter--disable-selection', flag);
     };
 
-    let doc;
-
     let {
         highlightsStore = $bindable(),
-        selectedTool = $bindable('text_selection'),
         pdfDocument,
         children,
         highlightPopup,
         editHighlightPopup,
         newHighlightPopup,
-        //textSelectionColor = DEFAULT_TEXT_SELECTION_COLOR,
         style,
         onContextMenu,
-        onSearch,
-        //setPdfHighlighterUtils,
         pdfHighlighterUtils = $bindable(),
-        selectionDelay = $bindable(1500),
     }: pdfHighlighterProps = $props();
 
-    let enableAreaSelection: (e: MouseEvent) => boolean = (event) => {
-        /*if (event.altKey) {
-            selectedTool = 'area_selection';
-            return true;
-        }*/
-        //return event.altKey || selectedTool === 'area_selection';
-        return selectedTool === 'area_selection';
-    }
+    let enableAreaSelection = $derived(pdfHighlighterUtils.selectedTool === 'area_selection');
     //let addGhostHighlight = highlightsStore.addGhostHighlight;
     //let removeGhostHighlights = highlightsStore.removeGhostHighlights;
 
-    
-    
-
     // State
-    let tip: Tip | null = $state(null);
-    let currentHl = $state(null);
-    let currentHlIndex = $state(0);
-    //const setTip = (val) => tip = val;
-    const setHLColor = (id, color) => {
-        highlightsStore.editHighlight(id, { color: color });
-    };
-
+    let currentHlId = $state(null);
+    let currentHlZIndex = $state(0);
     let isViewerReady = $state(false);
 
     // Refs
     let containerNodeRef: HTMLDivElement | null = null;
     let highlightBindingsRef: { [page: number]: HighlightBindings } = {};
     //let selectionRef: PdfSelection | null = null;
-    let selectionRef: any = null;
-    let scrolledToHighlightIdRef: string | null = null;
-    let isAreaSelectionInProgressRef = false;
-    let isEditInProgressRef = false;
+    let selectionRef: Highlight|null = null;
+    //let scrolledToHighlightIdRef: string | null = null;
+    //let isAreaSelectionInProgressRef = false;
 
     let eventBusRef: InstanceType<typeof EventBus>;
 
@@ -160,9 +134,21 @@
         //phraseSearch: true,
         findPrevious: false,
     };
+
+    //let prevQuery = "";
     const search = (options: SearchOptions = defaultSearchOptions) => {
         let opts = { ...defaultSearchOptions, ...options };
+        /*if (opts.query.length > 0 && opts.query === prevQuery) {
+            opts.type = 'again';
+        } else {
+            opts.type = 'again'; //'highlightallchange','', false
+        };
+        prevQuery = opts.query;*/
+
         eventBusRef.dispatch('find', opts);
+        if (opts.query.length <= 0) {
+            eventBusRef.dispatch("findbarclose", {});
+        }
     };
 
     let removeKeyDownHandlers;
@@ -170,8 +156,9 @@
     // Initialise PDF Viewer
     onMount(() => {
         console.log('PdfHighliter mount');
+
         if (!containerNodeRef) return;
-        onSearch(search);
+        pdfHighlighterUtils.search = search;
 
         //TODO: debounce
         let doc_init = setInterval(() => {
@@ -199,19 +186,66 @@
                     linkService: linkServiceRef,
                     findController: findController_instance,
                     annotationMode: 1,
+                    enableHWA: false,
                 }));
 
             viewerRef.setDocument(pdfDocument as any);
             linkServiceRef.setDocument(pdfDocument);
             linkServiceRef.setViewer(viewerRef);
-            isViewerReady = true;
+            
 
             resizeObserverRef = new ResizeObserver(handleScaleValue);
             resizeObserverRef.observe(containerNodeRef);
 
-            doc = containerNodeRef.ownerDocument;
-            eventBusRef.on('textlayerrendered', renderHighlightLayers);
-            eventBusRef.on('pagesinit', handleScaleValue);
+            //doc = containerNodeRef.ownerDocument;
+            eventBusRef.on('textlayerrendered', () => {
+                renderHighlightLayers(); 
+                //handleScaleValue();
+                console.log('textlayerrendered');
+            });
+            eventBusRef.on('pagesinit', ()=>{
+                isViewerReady = true; 
+                handleScaleValue(); 
+                console.log('pagesinit');
+            });
+
+
+            let getMatchesCount = debounce(() => {
+                pdfHighlighterUtils.setSearchState({
+                    matchesCount: {
+                        current: (findController_instance._matchesCountTotal > 0) ? 1 : 0, 
+                        total: findController_instance._matchesCountTotal,
+                    }
+                });
+            }, 300);
+
+            eventBusRef.on('updatefindcontrolstate', (data)=>{
+                pdfHighlighterUtils.setSearchState(data);
+                if (data.matchesCount.total === 0) {
+                    getMatchesCount();
+                }
+            });
+            // eventBusRef.on('updatefindmatchescount', (data)=>{
+            // });
+
+            eventBusRef.on('scrollmodechanged', (data: {mode: number})=>{
+                if (!pdfHighlighterUtils.pageLayout) return;
+                pdfHighlighterUtils.pageLayout.scrollMode = data.mode;
+            });
+            eventBusRef.on('scalechanging', (data: { scale: number, presetValue: string|undefined, }) =>
+            {
+                //{scale: 1.1, presetValue: "page-width"}
+            });
+            eventBusRef.on('spreadmodechanged', (data: {mode: number})=>{
+                if (!pdfHighlighterUtils.pageLayout) return;
+                pdfHighlighterUtils.pageLayout.spreadMode = data.mode;
+            });
+            // eventBusRef.on('updatetextlayermatches', (data)=>{
+            // });
+            eventBusRef.on('pagemode', (data)=>{
+            });
+                     
+                        
 
             removeKeyDownHandlers = on(viewerRef!.container, 'keydown', (event: KeyboardEvent) => {
                 if (event.code === 'Escape') {
@@ -244,9 +278,10 @@
                     if (event.ctrlKey) {
                         event.preventDefault();
                         pdfHighlighterUtils.setCurrentScaleValue(
-                            typeof pdfHighlighterUtils.currentScaleValue == 'number'
+                            pdfHighlighterUtils.currentScale - event.deltaY / 1000
+                            /*typeof pdfHighlighterUtils.currentScaleValue == 'number'
                                 ? pdfHighlighterUtils.currentScaleValue - event.deltaY / 1000
-                                : 1.0,
+                                : 1.0,*/
                         );
                         //handleScaleValue();
                     }
@@ -255,18 +290,18 @@
             );
 
             eventBusRef.on('pagesloaded', () => {
-                //console.log(viewerRef)
+                
             });
         }, 100);
 
         return () => {
-            //TODO
+            //TODO debounce
             //debouncedDocumentInit.cancel();
             eventBusRef.off('pagesinit', handleScaleValue);
             removeKeyDownHandlers();
             removeWheelHandler();
             resizeObserverRef?.disconnect();
-            //console.log('PdfHighliter unmount')
+            console.log('PdfHighliter unmount')
         };
     });
     //, [document]
@@ -285,11 +320,20 @@
     let isDragging_MouseDown = $state(false);
     let isSelectionInProgress = $state(false);
     const handleScroll = () => {
-        scrolledToHighlightIdRef = null;
+        pdfHighlighterUtils.scrolledToHighlightIdRef = null;
     };
 
-    let tipContainerState: any = {};
-    let updateSelectionTip;
+    let tipContainerState: TTipContainerState = {
+        show: false,
+        pinned: false,
+        highlight: null,
+        position: null,
+        addHighlight: highlightsStore.addHighlight,
+        clearSelection: function() {
+            //this.highlight = null;
+            clearTextSelection();
+        },
+    };
 
     const handleMouseUp: PointerEventHandler = () => {
         if (isDragging_MouseDown) {
@@ -336,29 +380,24 @@
             content,
             type: 'text',
             position: scaledPosition,
-            parent_hl_id: currentHl,
-            z_index: currentHlIndex + 1,
-            //z_index: currentHlIndex,
+            parent_hl_id: currentHlId,
+            z_index: currentHlZIndex + 1,
+            //z_index: currentHlZIndex,
         };
-        currentHl = null;
-        currentHlIndex = 0;
+        currentHlId = null;
+        currentHlZIndex = 0;
 
-        if (selectedTool !== 'highlight_pen') {
+        if (pdfHighlighterUtils.selectedTool !== 'highlight_pen') {
             tipContainerState.show = true;
             tipContainerState.pinned = true;
             tipContainerState.position = viewportPosition;
             tipContainerState.highlight = selectionRef;
-            tipContainerState.addHighlight = highlightsStore.addHighlight;
-            tipContainerState.clearSelection = () => {
-                //extTipContainerState.show = false;
-                tipContainerState.highlight = null;
-                clearTextSelection();
-            };
 
             pdfHighlighterUtils.setTip(tipContainerState);
             //addGhostHighlight(selectionRef);
         } else {
-            highlightsStore.addHighlight(selectionRef, '');
+            selectionRef.color = pdfHighlighterUtils.selectedColor;
+            highlightsStore.addHighlight(selectionRef);
             clearTextSelection();
         }
     };
@@ -381,11 +420,13 @@
         clearTextSelection();
         if (!(event.target instanceof Element)) return;
         if (
-            selectedTool === 'hand' ||
-            (!event.target.closest('span') &&
+            pdfHighlighterUtils.selectedTool === 'hand' || (
+                !event.target.closest('span') &&
+                !event.target.closest('textarea') &&
+                !event.target.closest('.Highlight__popup') &&
                 !event.target.closest('.resizers') &&
-                selectedTool !== 'area_selection') &&
-                !event.target.closest('.TextHighlight__part')
+                pdfHighlighterUtils.selectedTool !== 'area_selection'
+            ) && !event.target.closest('.TextHighlight__part')
         ) {
             pos = {
                 left: viewerRef!.container.scrollLeft,
@@ -405,14 +446,12 @@
         } else if (!isDragging_MouseDown) {
             isSelectionInProgress = true;
             //clearTextSelection();
-            setTimeout(()=>{
-                const container = containerNodeRef;
-                const selection = getWindow(container).getSelection();
-                //selection.collapse(selection.focusNode, selection.focusOffset)
-                //selection.collapse(selection.focusNode, selection.focusOffset)
-            }, 1000)
-            
-            
+            // setTimeout(()=>{
+            //     const container = containerNodeRef;
+            //     const selection = getWindow(container).getSelection();
+            //     //selection.collapse(selection.focusNode, selection.focusOffset)
+            //     //selection.collapse(selection.focusNode, selection.focusOffset)
+            // }, 1000)
         }
     };
 
@@ -438,7 +477,7 @@
             props: {
                 //highlightsByPage: highlightsStore.highlightsByPage[pageNumber],
                 pageNumber: pageNumber,
-                scrolledToHighlightId: scrolledToHighlightIdRef,
+                //scrolledToHighlightId: scrolledToHighlightIdRef,
                 viewer: viewerRef,
                 highlightBindings: highlightBindings,
                 children: children,
@@ -477,30 +516,6 @@
     };
 
     // Utils
-    const isEditingOrHighlighting = () => {
-        return (
-            Boolean(selectionRef) ||
-            //Boolean(ghostHighlightRef) ||
-            isAreaSelectionInProgressRef ||
-            isEditInProgressRef
-        );
-    };
-
-    const toggleEditInProgress = (flag?: boolean) => {
-        if (flag !== undefined) {
-            isEditInProgressRef = flag;
-        } else {
-            isEditInProgressRef = !isEditInProgressRef;
-        }
-
-        // Disable text selection
-        if (viewerRef) {
-            viewerRef.viewer?.classList.toggle(
-                'PdfHighlighter--disable-selection',
-                isEditInProgressRef,
-            );
-        }
-    };
 
     const clearTextSelection = () => {
         selectionRef = null;
@@ -508,115 +523,114 @@
         const selection = getWindow(container).getSelection();
         if (!container || !selection) return;
         selection.removeAllRanges();
-        //removeGhostHighlights();
     };
 
-    const scrollToHighlight = (highlight: Highlight) => {
-        const { boundingRect, usePdfCoordinates } = highlight.position;
-        const pageNumber = boundingRect.pageNumber;
+    pdfHighlighterUtils = {...{
+        scrollToHighlight: function(highlight: Highlight) {
+            const { boundingRect, usePdfCoordinates } = highlight.position;
+            const pageNumber = boundingRect.pageNumber;
 
-        // Remove scroll listener in case user auto-scrolls in succession.
-        viewerRef!.container.removeEventListener('scroll', handleScroll);
+            // Remove scroll listener in case user auto-scrolls in succession.
+            viewerRef!.container.removeEventListener('scroll', handleScroll);
 
-        const pageViewport = viewerRef!.getPageView(pageNumber - 1).viewport;
+            const pageViewport = viewerRef!.getPageView(pageNumber - 1).viewport;
 
-        viewerRef.scrollPageIntoView({
-            pageNumber,
-            destArray: [
-                null, // null since we pass pageNumber already as an arg
-                { name: 'XYZ' },
-                ...pageViewport.convertToPdfPoint(
-                    0, // Default x coord
-                    scaledToViewport(boundingRect, pageViewport, usePdfCoordinates).top -
-                        SCROLL_MARGIN,
-                ),
-                0, // Default z coord
-            ],
-        });
-
-        scrolledToHighlightIdRef = highlight.id;
-        //RrenderHighlightLayers();
-
-        // wait for scrolling to finish
-        setTimeout(() => {
-            viewerRef!.container.addEventListener('scroll', handleScroll, {
-                once: true,
+            viewerRef.scrollPageIntoView({
+                pageNumber,
+                destArray: [
+                    null, // null since we pass pageNumber already as an arg
+                    { name: 'XYZ' },
+                    ...pageViewport.convertToPdfPoint(
+                        0, // Default x coord
+                        scaledToViewport(boundingRect, pageViewport, usePdfCoordinates).top -
+                            SCROLL_MARGIN,
+                    ),
+                    0, // Default z coord
+                ],
             });
-        }, 100);
-    };
 
-    pdfHighlighterUtils = {
-            isEditingOrHighlighting,
-            getCurrentSelection: () => selectionRef,
-            toggleEditInProgress,
-            isEditInProgress: () => isEditInProgressRef,
-            isSelectionInProgress: () => {
-                return Boolean(selectionRef) || isAreaSelectionInProgressRef;
-            },
-            scrollToHighlight,
-            getViewer: () => viewerRef,
-            getTip: () => tip,
-            currentScale: 1,
-            currentScaleValue: 1,
-            setCurrentScaleValue: (value: PdfScaleValue) => {
-                if (typeof value === 'string') {
-                    pdfHighlighterUtils.currentScaleValue = value;
-                } else if (value > 3 || value <= 0) {
-                    //pdfHighlighterUtils.pdfScaleValue.val = 1;
-                } else {
-                    pdfHighlighterUtils.currentScaleValue = parseFloat(value.toFixed(1));
-                }
-                pdfHighlighterUtils.setTip(null);
-            },
-            setCurrentHighlight: (hl) => {
-                currentHl = hl;
-            },
-            setCurrentHighlightIndex: (index) => {
-                currentHlIndex = index;
-            },
+            this.scrolledToHighlightIdRef = highlight.id;
 
-            getTextSelectionDelay: () => {
-                //isSelectionInProgress = true;
-                return selectionDelay;
-            },
-            getSelectedTool: () => {
-                return selectedTool;
-            },
+            // wait for scrolling to finish
+            setTimeout(() => {
+                viewerRef!.container.addEventListener('scroll', handleScroll, {
+                    once: true,
+                });
+                this.scrolledToHighlightIdRef = '';
+            }, 500);
+        },
+        //getCurrentSelection: () => selectionRef,
+        isSelectionInProgress: () => isSelectionInProgress,
 
-        };
+        //scrollToHighlight,
+        scrolledToHighlightIdRef: '',
+        //getViewer: () => viewerRef,
+        //getTip: () => tip,
+        currentScale: 1,
+        currentScaleValue: 1,
+        setCurrentScaleValue: (value: PdfScaleValue) => {
+            if (typeof value === 'string') {
+                pdfHighlighterUtils.currentScaleValue = value;
+            } else if (value < 3 && value >= 0) {
+                pdfHighlighterUtils.currentScaleValue = parseFloat(value.toFixed(1));
+            }
 
-    let enableTextSelection = $state(true);
-    const setPdfTextSelection = (value) => {
-        enableTextSelection = value;
-    };
+            pdfHighlighterUtils.setTip(null);
+        },
+        setCurrentHighlightId: (hl) => {
+            currentHlId = hl;
+        },
+        setCurrentHighlightZIndex: (index) => {
+            currentHlZIndex = index;
+        },
 
-    const gotoSidebarRef = (id) => {
-        alert(id);
-    };
+        textSelectionDelay: 1500,
 
-    const colors = getContext('colors') || ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'];
+        selectedTool: 'text_selection',
+        selectedColor: 'red',
+        setTip: () => {},
+        searchState: {matchesCount: {current: 0, total: 0}},
+        setSearchState: (state) => {pdfHighlighterUtils.searchState = state;},
+        getSearchState: () => {return pdfHighlighterUtils.searchState},
+            
+        pageLayout: {spreadMode: 0, scrollMode: 0},
+        setPageLayout: (opts) => {
+            if (opts.spreadMode !== undefined) viewerRef.spreadMode = opts.spreadMode;
+            if (opts.scrollMode !== undefined) viewerRef.scrollMode = opts.scrollMode;
+            if (opts.pagesRotation !== undefined) viewerRef.pagesRotation = opts.pagesRotation;
+        },
+
+    }, ...pdfHighlighterUtils } as TPdfHighlighterUtils;
+
+
+    const colors: string[] = getContext('colors') || ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'];
 
     let derived_style = $derived.by(() => {
-        if (selectedTool == 'hand') {
+        if (pdfHighlighterUtils.selectedTool == 'hand') {
             return 'cursor: grab;' + style;
-        } else if (selectedTool == 'pen') {
+        } else if (pdfHighlighterUtils.selectedTool == 'pen') {
             return 'cursor: grab !important;' + style;
         } else {
             return style;
         }
     });
     let derived_classes = $derived.by(() => {
-        if (selectedTool === 'hand' || isDragging_MouseDown) {
-            return 'isDragging pdfViewer removePageBorders';
-        } else if (selectedTool === 'highlight_pen') {
-            return 'isPen pdfViewer removePageBorders';
-        } else if (selectedTool === 'area_selection') {
-            return 'isArea pdfViewer removePageBorders';
+        let _str = 'removePageBorders pdfViewer ';
+        if (pdfHighlighterUtils.selectedTool === 'hand' || isDragging_MouseDown) {
+            _str += 'isDragging ';
+        } else if (pdfHighlighterUtils.selectedTool === 'highlight_pen') {
+            _str += 'isPen ';
+        } else if (pdfHighlighterUtils.selectedTool === 'area_selection') {
+            _str += 'isArea ';
         } else if (isSelectionInProgress) {
-            return 'isSelectionInProgress pdfViewer removePageBorders';
-        } else {
-            return 'pdfViewer removePageBorders';
+            _str += 'isSelectionInProgress ';
         }
+
+        if (pdfHighlighterUtils.pageLayout.scrollMode === 1) {
+            _str += 'scrollHorizontal';
+        }
+
+        return _str;
     });
 </script>
 
@@ -624,22 +638,26 @@
     .disableTextSelection {
         user-select: none;
     }
+
     .PdfHighlighter {
         position: absolute;
         overflow: auto;
         width: 100%;
         height: 100%;
-    }
 
-    /* Style the scrollbar */
-    .PdfHighlighter::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        display: flex;
+        flex-flow: column;
     }
-
+    
     /*:global(.textLayer ::selection) {
         background: yellowgreen;
     }*/
+
+    /* Style the scrollbar */
+    /*.PdfHighlighter::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
 
     .PdfHighlighter::-webkit-scrollbar-thumb {
         background-color: #9f9f9f;
@@ -657,7 +675,7 @@
 
     .PdfHighlighter::-webkit-scrollbar-track-piece {
         background-color: #2c2c2c;
-    }
+    }*/
 
     .PdfHighlighter__tip-container {
         z-index: 6;
@@ -718,7 +736,7 @@
         //It seems there is no quick and proper way to make highlighted text selectable without disabling pointer-events on the highlight div before onpointerdown event is triggered.
         //Currently, after the onpointerdown event fires on highlight div, its pointer events are set to disabled, but the selection anchor's (which initially is set on dissappeared div) behavior is no longer defined. 
         //This approach may work randomly, needs to be rewriten in the future.
-        //selectionDelay -1 to disable
+        //pdfHighlighterUtils.textSelectionDelay -1 to disable
 
         //Text selection in area highlights works iff the page also contains one or more text highlights (chrome 132.0.6834.168).
 
@@ -754,16 +772,13 @@
     {#if isViewerReady && enableAreaSelection}
         <MouseSelection
             viewer={viewerRef!}
-            enableAreaSelection={(e) => {return enableAreaSelection(e);}}
+            enableAreaSelection={enableAreaSelection}
             onDragStart={() => disableTextSelection(viewerRef!, true)}
             onReset={() => {
                 selectionRef = null;
                 disableTextSelection(viewerRef!, false);
             }}
             onMouseUp={()=>{
-                /*if (event.altKey) {
-                    selectedTool = 'text_selection';
-                }*/
             }}
             onSelection={(
                 viewportPosition,
@@ -775,8 +790,9 @@
                     content: { image },
                     type: "area",
                     position: scaledPosition,
+                    color: pdfHighlighterUtils.selectedColor,
                     };
-                highlightsStore.addHighlight(selectionRef, '');
+                highlightsStore.addHighlight(selectionRef);
                 //onAreaSelectionFin();
                 clearTextSelection();
                 }

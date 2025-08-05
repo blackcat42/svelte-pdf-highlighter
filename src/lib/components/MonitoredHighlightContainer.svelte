@@ -26,14 +26,15 @@
         /**
          * Component to monitor mouse activity over. This should be a highlight within the {@link PdfHighlighter}.
          */
-        children: any;
+        children: Snippet;
 
-        pdfHighlighterUtils: any;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
     }
 </script>
 
 <script lang="ts">
-    import type { Tip } from '$lib/types';
+    import type { Tip, PdfHighlighterUtils as TPdfHighlighterUtils, } from '$lib/types';
+    import type { Snippet } from 'svelte';
     //import {setContext, getContext} from "svelte";
 
     /**

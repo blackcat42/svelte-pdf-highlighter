@@ -1,9 +1,10 @@
 <script lang="ts">
     //providing context
-
+    import type { Snippet } from 'svelte';
+    
     interface HighlightChildrenWrapperProps {
         child_context: any;
-        children: any;
+        children: Snippet;
     }
 
     import { setContext } from 'svelte';

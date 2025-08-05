@@ -6,15 +6,14 @@
         editHighlight: (id: string, highlight: Highlight) => void;
         deleteHighlight: (highlight: Highlight) => void;
         sidebarScrollToId: any;
-        pdfHighlighterUtils: any;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         colors: Array<string>;
-        selectionDelay: number;
         highlightMixBlendMode: string;
     }
 </script>
 
 <script lang="ts">
-    import type { Highlight } from '$lib/types.ts';
+    import type { Highlight, PdfHighlighterUtils as TPdfHighlighterUtils, } from '$lib/types.ts';
     //import { Highlight } from "$lib/types.ts";
     const APP_VERSION: string = '0.1.0';
     const updateHash = (highlight: Highlight) => {
@@ -28,9 +27,8 @@
         editHighlight,
         deleteHighlight,
         sidebarScrollToId,
-        pdfHighlighterUtils,
+        pdfHighlighterUtils = $bindable(),
         colors,
-        selectionDelay = $bindable(),
         highlightMixBlendMode = $bindable(),
     }: SidebarProps = $props();
 
@@ -54,7 +52,7 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
-    .highlight__image__container::-webkit-scrollbar,
+    /*.highlight__image__container::-webkit-scrollbar,
     .sidebar::-webkit-scrollbar {
         width: 10px;
         height: 10px;
@@ -81,7 +79,7 @@
     .sidebar::-webkit-scrollbar-track-piece {
         background-color: none;
         border-radius: 5px;
-    }
+    }*/
 
     .sidebar__highlights {
         list-style: none;
@@ -225,9 +223,12 @@
     }
 
     .sidebar__delete {
-        width: 15px;
-        height: 15px;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" fill="%23919191"/></svg>');
+        width: 20px;
+        height: 20px;
+
+        
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23555" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><!--Lucide - https://lucide.dev License - https://lucide.dev/license Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.--></svg>');
+        /*background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" fill="%23919191"/></svg>');*/
         background-size: cover;
         border: none;
         cursor: pointer;
@@ -235,7 +236,8 @@
         margin: 3px;
     }
     .sidebar__delete:hover {
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" fill="%23555"/></svg>');
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><!--Lucide - https://lucide.dev License - https://lucide.dev/license Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.--></svg>');
+        /*background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" fill="%23555"/></svg>');*/
         background-size: cover;
     }
 
@@ -278,7 +280,7 @@
         </p> 
         Settings:<br>
         <small>Delay (in ms) before text in highlight becomes selactable (-1 to disable):</small> <br>
-        <input type="number" bind:value={selectionDelay} />
+        <input type="number" bind:value={pdfHighlighterUtils.textSelectionDelay} />
         <br>
         <small>Highlight's mix-blend-mode: </small> <br>
         <select
@@ -304,7 +306,16 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <li id={highlight.id} class="sidebar__highlight" >
                     <div style = "background: {highlight.color ? highlight.color : '#fcf151'};" class="sidebar__highlight-wrapper">
-                        <div style = "background: transparent; width: 100%; height: 22px;">
+                        <div style = "
+                            background: transparent; 
+                            width: 100%; 
+                            height: 22px; 
+                            align-items: center;
+                            display: inline-flex;
+                            flex-direction: row-reverse;
+                            vertical-align: middle;
+                            "
+                        >
                             {#if (selected_id_to_del == highlight.id)}
                                 <div style="float:right;">
                                     <span style="font-size: small;">delete this highlight?</span>
@@ -319,7 +330,7 @@
                             <div class="sidebar__color_select">
                                 <select
                                     value={highlight.color}
-                                    onchange={(e)=>editHighlight(highlight.id, {color: e.target.value})}
+                                    onchange={(e)=>editHighlight(highlight.id, {color: (e.target as HTMLInputElement).value})}
                                     style="background: {highlight.color}"
                                 >
                                     {#each colors as color}
@@ -333,7 +344,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: e.target.value})}></textarea></div>
+                        <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: (e.target as HTMLInputElement).value})}></textarea></div>
                         <div style = "background: #f8f9fa; border-top: 1px solid #ddd;">
                             {#if highlight.content.text}
                                 <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.scrollToHighlight(highlight)}}>
@@ -364,14 +375,14 @@
         </ul>
     {/if}
 
-    <div style={{ padding: "0.5rem" }}>
+    <div style="padding: 0.5rem">
         <button onclick={()=>{}} class="sidebar__toggle">
             Toggle PDF document
         </button>
     </div>
 
     {#if highlights && highlights.length > 0}
-        <div style={{ padding: "0.5rem" }}>
+        <div style="padding: 0.5rem">
             <button onclick={resetHighlights} class="sidebar__reset">
                 Reset highlights
             </button>

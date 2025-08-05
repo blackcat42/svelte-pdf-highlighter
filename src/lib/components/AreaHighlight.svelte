@@ -21,10 +21,9 @@
         onChange?(rect: LTWHP): void;
 
         /**
-         * TODO:
          * Has the highlight been auto-scrolled into view? By default, this will render the highlight red.
          */
-        isScrolledTo?: boolean;
+        //isScrolledTo?: boolean;
 
         /**
          * Bounds on the highlight area. This is useful for preventing the user
@@ -50,17 +49,19 @@
          */
         style?: any;
 
-        pdfHighlighterUtils: TPdfHighlighterUtils;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         highlightMixBlendMode?: string;
-        isDraggable: boolean;
+        isDraggable?: boolean;
     }
 </script>
 
 <script lang="ts">
-    //TODO: custom styling, isScrolledTo
+    //TODO: custom styling
+    //TODO: DRY?
     import { debounce } from "$lib/utils.ts";
     import RND from '$lib/components/RND.svelte';
     import type { LTWHP, LTWH, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils } from '$lib/types';
+    import { getContext } from 'svelte';
 
     /**
      * The props type for {@link AreaHighlight}.
@@ -76,7 +77,6 @@
     let {
         highlight,
         onChange,
-        isScrolledTo,
         bounds,
         onContextMenu,
         //onEditStart,
@@ -84,29 +84,25 @@
         pdfHighlighterUtils,
         highlightMixBlendMode = 'normal',
         onClick,
-        isDraggable,
+        isDraggable = false,
     }: AreaHighlightProps = $props();
-    let highlightClass = $derived.by(() => (isScrolledTo ? 'AreaHighlight--scrolledTo' : ''));
+
+    let color: string = $state('');
+    if (highlight.color) {
+        color = highlight.color
+    } else {
+        color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+    }
 
     let isAllowTextSelection = $state(false);
-    let delay = $derived.by(()=>pdfHighlighterUtils.getTextSelectionDelay());
+    let delay = pdfHighlighterUtils.textSelectionDelay;
     const allowTextSelection = debounce(() => {
         if (delay < 0) return;
         isAllowTextSelection = true;
-    }, pdfHighlighterUtils.getTextSelectionDelay);
+    }, () => pdfHighlighterUtils.textSelectionDelay);
 </script>
 
 <style>
-    .AreaHighlight__part {
-        cursor: pointer;
-        position: absolute;
-        background: rgba(255, 226, 143, 1);
-        transition: background 0.3s;
-    }
-
-    .AreaHighlight--scrolledTo .AreaHighlight__part {
-        background: #ff4141;
-    }
     .allowSelect {
         cursor: text;
         opacity: 0.8;
@@ -119,9 +115,8 @@
 <div  oncontextmenu={onContextMenu}  style="mix-blend-mode: {highlightMixBlendMode}"
     class= {isAllowTextSelection ? 'AreaHighlight allowSelect':'AreaHighlight'}
     onmouseenter={() => {
-        //pdfHighlighterUtils.setCurrentHighlight(highlight.id);
-        if (pdfHighlighterUtils.getSelectedTool() === 'text_selection') {
-            //delay = parseInt(pdfHighlighterUtils.getTextSelectionDelay());
+        //pdfHighlighterUtils.setCurrentHighlightId(highlight.id);
+        if (pdfHighlighterUtils.selectedTool === 'text_selection') {
             allowTextSelection();
         }
                           
@@ -129,7 +124,7 @@
     onmouseleave={() => {
         allowTextSelection.cancel();
         isAllowTextSelection = false;
-        //pdfHighlighterUtils.setCurrentHighlight(null);
+        //pdfHighlighterUtils.setCurrentHighlightId(null);
     }}
 >
     {#key highlight.position.boundingRect}
@@ -150,10 +145,9 @@
                 };
 
               onChange && onChange(boundingRect);
-              //tipContainerState.tip.position = {boundingRect};
             }}
             bounds={bounds}
-            color={highlight.color}
+            color={color}
             {onClick}
             {isDraggable}
         ></RND>

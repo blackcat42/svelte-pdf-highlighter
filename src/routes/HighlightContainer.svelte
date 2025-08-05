@@ -5,7 +5,7 @@
     import MonitoredHighlightContainer from '$lib/components/MonitoredHighlightContainer.svelte';
 
     import { onMount, getContext, getAllContexts } from 'svelte';
-    import type { CommentedHighlight, Tip, ViewportHighlight } from '$lib/types.ts';
+    import type { CommentedHighlight, Tip, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils} from '$lib/types.ts';
 
     interface HighlightContainerProps {
         editHighlight: (idToUpdate: string, edit: Partial<CommentedHighlight>) => void;
@@ -14,7 +14,7 @@
             highlight: ViewportHighlight<CommentedHighlight>,
         ) => void;
         onClick?: any;
-        pdfHighlighterUtils: any;
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         highlightMixBlendMode: string;
     }
 
@@ -28,7 +28,7 @@
     let contexts = getAllContexts();
 
     //context set in HighLightLayer
-    let { highlight, viewportToScaled, screenshot, isScrolledTo, highlightBindings }: any =
+    let { highlight, viewportToScaled, screenshot, highlightBindings }: any =
         getContext('highlightUtils'); //HighlightContext
 
     //const { toggleEditInProgress } = pdfHighlighterUtils; //usePdfHighlighterContext();
@@ -45,7 +45,6 @@
 <MonitoredHighlightContainer highlightTip={highlightTip} {pdfHighlighterUtils}> 
     {#if highlight.type === "text"}
         <TextHighlight
-            isScrolledTo={isScrolledTo}
             highlight={highlight}
             onContextMenu={(event) =>
                 onContextMenu && onContextMenu(event, highlight)
@@ -59,7 +58,6 @@
         />
     {:else}
         <AreaHighlight
-            isScrolledTo={isScrolledTo}
             highlight={highlight}
             onChange={(boundingRect) => {
                 const edit = {

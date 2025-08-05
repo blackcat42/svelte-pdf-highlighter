@@ -59,6 +59,7 @@
         TypedArray,
         PDFDocumentProxy,
         OnProgressParameters,
+        PDFDocumentLoadingTask,
     } from 'pdfjs-dist/types/src/display/api';
     import type { Snippet } from 'svelte';
 
@@ -83,11 +84,11 @@
         onError = DEFAULT_ON_ERROR,
         workerSrc = DEFAULT_WORKER_SRC,
     }: PdfLoaderProps = $props();
-    let pdfLoadingTaskRef: any = null;
+    let pdfLoadingTaskRef: PDFDocumentLoadingTask | null = null;
     let pdfDocumentRef: PDFDocumentProxy | null = $state(null);
 
     let error: Error | null = $state(null);
-    let loadingProgress: any = $state(null);
+    let loadingProgress: OnProgressParameters | null = $state(null);
 
     // Intitialise document
 
@@ -95,12 +96,12 @@
         GlobalWorkerOptions.workerSrc = workerSrc;
 
         pdfLoadingTaskRef = getDocument(document);
-        pdfLoadingTaskRef.onProgress = (progress) => {
+        pdfLoadingTaskRef.onProgress = (progress: OnProgressParameters) => {
             loadingProgress = progress.loaded > progress.total ? null : progress;
         };
 
         pdfLoadingTaskRef.promise
-            .then((pdfDocument) => {
+            .then((pdfDocument: PDFDocumentProxy) => {
                 pdfDocumentRef = pdfDocument;
             })
             .catch((err: Error) => {

@@ -20,7 +20,7 @@ const groupHighlightsByPage = (
       pageNumbers.add(item.pageNumber ? item.pageNumber : 0)
     });
 
-      pageNumbers.forEach((pageNumber) => {
+      pageNumbers.forEach((pageNumber: number) => {
       res[pageNumber] ||= [];
 
       if (0) {

@@ -39,22 +39,24 @@
          */
         children: Snippet;
 
-        highlightsStore: any;
-        pdfHighlighterUtils: any;
+        highlightsStore: HighlightsModel<Highlight>;
+        
+        pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
     }
 </script>
 
 <script lang="ts">
     import type { PDFViewer } from 'pdfjs-dist/types/web/pdf_viewer';
+    import type { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
     import { scaledPositionToViewport, viewportToScaled } from '$lib/pdf_utils/coordinates';
     import screenshot from '$lib/pdf_utils/screenshot';
     import type {
-        GhostHighlight,
         Highlight,
         HighlightBindings,
         LTWH,
         LTWHP,
         ViewportHighlight,
+        PdfHighlighterUtils as TPdfHighlighterUtils,
     } from '$lib/types.ts';
     import HighlightChildrenWrapper from '$lib/components/HighlightChildrenWrapper.svelte';
 
@@ -74,7 +76,6 @@
     let {
         //highlightsByPage,
         pageNumber,
-        scrolledToHighlightId,
         viewer,
         highlightBindings,
         children,
@@ -86,7 +87,6 @@
 
     /*onMount(() => {
         console.log('H.layer mount - ' + pageNumber);
-        //pdfScaleValue = getContext('pdfScaleValue');
         return () => {
             console.log('H.layer unmount - ' + pageNumber);
         };
@@ -106,7 +106,7 @@
                 position: scaledPositionToViewport(highlight.position, viewer),
             };
 
-            const isScrolledTo = Boolean(scrolledToHighlightId === viewportHighlight.id);
+            //const isScrolledTo = Boolean(pdfHighlighterUtils.scrolledToHighlightIdRef === viewportHighlight.id);
 
             const highlightUtils = {
                 highlight: viewportHighlight,
@@ -118,7 +118,6 @@
                     return viewportToScaled(rect, viewport);
                 },
                 screenshot: (boundingRect: LTWH) => screenshot(boundingRect, pageNumber, viewer),
-                isScrolledTo: isScrolledTo,
                 highlightBindings,
             };
             return highlightUtils;
@@ -130,7 +129,6 @@
     $effect.pre(() => {
         //TODO: remove effects and keys, force remount whole layer (when scale or highlights[page_number] change) instead
         pdfHighlighterUtils.currentScale; //dependence
-        //scrolledToHighlightId;
         a_currentHighlights = getScaledHighlights(currentHighlights);
         //console.log('run HL effect, page:' + pageNumber);
     });
@@ -145,7 +143,7 @@
         //_hls_area.sort((a, b) => a.highlight.z_index - b.highlight.z_index);
         //return [..._hls_area,..._hls_txt];
 
-        highlights = highlights.toReversed();
+        //highlights = highlights.toReversed(); //order of same index highlights
         highlights.sort((a, b) => a.highlight.z_index - b.highlight.z_index);
         return highlights;
 
@@ -195,9 +193,7 @@
     <HighlightChildrenWrapper child_context={highlightUtils}>
         {@render children?.()}
     </HighlightChildrenWrapper>
-    <!--<HighlightContext.Provider value={highlightUtils} key={index}>
-        {children}
-    </HighlightContext.Provider>-->
+
     {/each}
 </div>
 {/key}
