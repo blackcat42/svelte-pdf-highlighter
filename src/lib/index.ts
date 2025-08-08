@@ -8,6 +8,7 @@ export { default as MonitoredHighlightContainer } from '$lib/components/Monitore
 
 export { HighlightsModel } from '$lib/HighlightsModel.svelte';
 export * from '$lib/types';
+export * from '$lib/utils';
 
 /*export { PdfHighlighter } from "./components/PdfHighlighter";
 export { Tip } from "./components/Tip";

@@ -1,6 +1,6 @@
 {
 	"name": "svelte-pdf-highlighter",
-	"version": "0.1.0-alpha.0",
+	"version": "0.2.2",
 	"description": "Svelte components for PDF highlighting",
 	"author": "Sergey Gapchenko <gapchenko42@gmail.com>",
 	"license": "MIT",

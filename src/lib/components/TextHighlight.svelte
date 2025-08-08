@@ -55,7 +55,7 @@
 
 <script lang="ts">
     //TODO: DRY?
-    import { debounce } from "$lib/utils.ts";
+    import { debounce } from "$lib/utils";
     import type { ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils} from '$lib/types';
     import { getContext } from 'svelte';
 

@@ -58,7 +58,7 @@
 <script lang="ts">
     //TODO: custom styling
     //TODO: DRY?
-    import { debounce } from "$lib/utils.ts";
+    import { debounce } from "$lib/utils";
     import RND from '$lib/components/RND.svelte';
     import type { LTWHP, LTWH, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils } from '$lib/types';
     import { getContext } from 'svelte';

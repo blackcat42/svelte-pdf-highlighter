@@ -22,7 +22,7 @@
 </script>
 
 <script lang="ts">
-    import { debounce } from "$lib/utils.ts";
+    import { debounce } from "$lib/utils";
 
     let {
         viewer,

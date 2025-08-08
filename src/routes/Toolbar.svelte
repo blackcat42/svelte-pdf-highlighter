@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { debounce } from '$lib/utils.ts';
+    import { debounce } from '$lib/utils';
     import { derived } from 'svelte/store';
     import type {
         PdfHighlighterUtils as TPdfHighlighterUtils,
