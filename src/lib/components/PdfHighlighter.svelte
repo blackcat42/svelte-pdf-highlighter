@@ -12,12 +12,18 @@
     export interface pdfHighlighterProps {
         highlightsStore: HighlightsModel<any>;
         pdfDocument: PDFDocumentProxy;
-        children: Snippet;
         highlightPopup?: Snippet;
         editHighlightPopup?: Snippet;
         newHighlightPopup?: Snippet;
+        highlightContainer?: Snippet;
         style: string;
         onContextMenu: (e: MouseEvent) => void;
+        onHighlightContextMenu?: (
+            event: MouseEvent,
+            highlight: ViewportHighlight<CommentedHighlight>,
+        ) => void;
+        onHighlightClick?: any;
+        highlightMixBlendMode?: string;
         pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
     }
 </script>
@@ -37,6 +43,8 @@
         PdfHighlighterUtils as TPdfHighlighterUtils,
         TipContainerState as TTipContainerState,
         PdfScaleValue,
+        ViewportHighlight,
+        CommentedHighlight,
     } from '$lib/types';
 
     import {
@@ -50,6 +58,7 @@
     import { mount, unmount, setContext, getContext, onMount, getAllContexts } from 'svelte';
     import HighlightLayer from '$lib/components/HighlightLayer.svelte';
     import MouseSelection from '$lib/components/MouseSelection.svelte';
+    import HighlightContainer from '$lib/components/HighlightContainer.svelte';
     import TipContainer from '$lib/components/TipContainer.svelte';
     import getClientRects from '$lib/pdf_utils/get-client-rects';
     import getBoundingRect from '$lib/pdf_utils/get-bounding-rect';
@@ -92,12 +101,15 @@
     let {
         highlightsStore = $bindable(),
         pdfDocument,
-        children,
+        highlightContainer = defaultHighlightContainer,
         highlightPopup,
         editHighlightPopup,
         newHighlightPopup,
         style,
         onContextMenu,
+        onHighlightContextMenu,
+        onHighlightClick,
+        highlightMixBlendMode,
         pdfHighlighterUtils = $bindable(),
     }: pdfHighlighterProps = $props();
 
@@ -480,7 +492,7 @@
                 //scrolledToHighlightId: scrolledToHighlightIdRef,
                 viewer: viewerRef,
                 highlightBindings: highlightBindings,
-                children: children,
+                children: highlightContainer,
                 highlightsStore: highlightsStore,
                 pdfHighlighterUtils: pdfHighlighterUtils,
             },
@@ -719,6 +731,15 @@
     }
 </style>
 
+{#snippet defaultHighlightContainer()}
+    <HighlightContainer
+        {highlightMixBlendMode}
+        editHighlight = {highlightsStore.editHighlight}
+        onContextMenu={onHighlightContextMenu}
+        onClick = {onHighlightClick}
+        {pdfHighlighterUtils}
+    />
+{/snippet}
 
 <div
     bind:this={containerNodeRef}

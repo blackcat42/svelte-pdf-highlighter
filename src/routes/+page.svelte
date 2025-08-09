@@ -1,7 +1,6 @@
 <script lang="ts">
     import ContextMenu from './ContextMenu.svelte';
     import type { ContextMenuProps } from './ContextMenu.svelte';
-    import HighlightContainer from './HighlightContainer.svelte';
     import Sidebar from './Sidebar.svelte';
     import Toolbar from './Toolbar.svelte';
     import PdfLoader from '$lib/components/PdfLoader.svelte';
@@ -213,19 +212,29 @@
                         pdfDocument={pdfDocumentRef}
                         style="height: 100%;"
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
-                        bind:pdfHighlighterUtils = {pdfHighlighterUtils}
-                    >
-                        <HighlightContainer
-                            {highlightMixBlendMode}
-                            editHighlight = {highlightsStore.editHighlight}
-                            onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
-                            onClick = {(e, data) => {
+                        onHighlightContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
+                        onHighlightClick = {(e, data) => {
                                 e.stopPropagation();
                                 sidebarScrollToId(data.id);
-                                //setTip({highlight: data, show: true, position: data.position}, true, true);
                             }}
-                            {pdfHighlighterUtils}
-                        />
+                        {highlightMixBlendMode}
+                        bind:pdfHighlighterUtils = {pdfHighlighterUtils}
+                    >
+
+                        <!-- Custom highlight container (optional) -->
+                        <!-- {#snippet highlightContainer()}
+                            <HighlightContainer
+                                {highlightMixBlendMode}
+                                editHighlight = {highlightsStore.editHighlight}
+                                onContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
+                                onClick = {(e, data) => {
+                                    e.stopPropagation();
+                                    sidebarScrollToId(data.id);
+                                    //setTip({highlight: data, show: true, position: data.position}, true, true);
+                                }}
+                                {pdfHighlighterUtils}
+                            />
+                        {/snippet} -->
 
                         <!-- Custom popup snippets (optional) -->
                         <!--

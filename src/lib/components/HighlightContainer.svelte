@@ -4,7 +4,7 @@
     import TextHighlight from '$lib/components/TextHighlight.svelte';
     import MonitoredHighlightContainer from '$lib/components/MonitoredHighlightContainer.svelte';
 
-    import { onMount, getContext, getAllContexts } from 'svelte';
+    import { onMount, getContext } from 'svelte';
     import type { CommentedHighlight, Tip, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils} from '$lib/types.ts';
 
     interface HighlightContainerProps {
@@ -15,7 +15,7 @@
         ) => void;
         onClick?: any;
         pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
-        highlightMixBlendMode: string;
+        highlightMixBlendMode?: string;
     }
 
     let {
@@ -23,9 +23,8 @@
         onContextMenu,
         onClick,
         pdfHighlighterUtils,
-        highlightMixBlendMode,
+        highlightMixBlendMode = 'normal',
     }: HighlightContainerProps = $props();
-    let contexts = getAllContexts();
 
     //context set in HighLightLayer
     let { highlight, viewportToScaled, screenshot, highlightBindings }: any =
