@@ -1,84 +1,102 @@
 <script lang="ts">
-    import ContextMenu from './ContextMenu.svelte';
-    import type { ContextMenuProps } from './ContextMenu.svelte';
-    import Sidebar from './Sidebar.svelte';
-    import Toolbar from './Toolbar.svelte';
+
+    import { onMount, setContext, } from 'svelte';
+    import { on } from 'svelte/events';
+
     import PdfLoader from '$lib/components/PdfLoader.svelte';
     import PdfHighlighter from '$lib/components/PdfHighlighter.svelte';
+    import { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
 
-    import { testHighlights as _testHighlights } from './test-highlights.ts';
-    const TEST_HIGHLIGHTS = _testHighlights;
+    import ContextMenu from './ContextMenu.svelte';
+    import Sidebar from './Sidebar.svelte';
+    import Toolbar from './Toolbar.svelte';
+    import { testHighlights } from './test-highlights.ts';
+
+    import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api.d.ts';
 
     import type {
         Highlight,
         ViewportHighlight,
         CommentedHighlight,
-        Tip,
-        PdfScaleValue,
         PdfHighlighterUtils as TPdfHighlighterUtils,
     } from '$lib/types.ts';
 
-    import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api.d.ts';
+    import type { ContextMenuProps } from './ContextMenu.svelte';
 
-    import { onMount, setContext, getContext } from 'svelte';
-    import { HighlightsModel } from '$lib/HighlightsModel.svelte.ts';
+    
+    const colors = ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'];
+    const scrolledTo_color = 'red';
+    let contextMenu: ContextMenuProps | null = $state(null);
+    let sidebarVisible = $state(true);
+    let sidebarScrollToId: (id: string) => void;
+    let pdfHighlighterUtils: Partial<TPdfHighlighterUtils> | null = $state(null);
 
-    //let s_hash = $state('');
-    //const parseIdFromHash = () => {
-    //  return s_hash.slice("#highlight-".length);
-    //};
-    //const resetHash = () => {
-    //  s_hash = "";
-    //};
-
-    let colors = setContext('colors', ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe']);
-    let scrolled_to_color: string|false|null = setContext('scrolledTo_color', 'red');
-    let url: string | URL | DocumentInitParameters = $state('https://arxiv.org/pdf/2203.11115');
+    let workerUrl: string | null = $state(null);
+     (async () => {
+         workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; // https://vite.dev/guide/assets.html#explicit-url-imports
+     })();
+    //workerUrl = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+    let url: string | URL | DocumentInitParameters = $state.raw('https://arxiv.org/pdf/2203.11115');
     //let url: string | URL | DocumentInitParameters = $state('2203.11115v1.pdf');
-    setContext('document', url);
-    //document: string | URL | TypedArray | DocumentInitParameters;
 
-    //custom field example
+
+    /** custom field example */
     // interface MyHighlight extends CommentedHighlight {
     //     custom_field: number;
     // }
-    // let _highlights: Array<MyHighlight> = TEST_HIGHLIGHTS['https://arxiv.org/pdf/2203.11115'].map((item) => {
+    // let _highlights: Array<MyHighlight> = testHighlights['https://arxiv.org/pdf/2203.11115'].map((item) => {
     //     item['custom_field'] = 0;
     //     return item as MyHighlight;
     // });
 
-    let _highlights: Array<Highlight> = TEST_HIGHLIGHTS['https://arxiv.org/pdf/2203.11115'] ?? [];
-    let highlightsStore = new HighlightsModel(_highlights);
-    //let unsubscribe = highlightsStore.subscribe((array_of_all_highlights_including_new_or_updated)=>{
-    //    //save data to server...
-    //    if (true) return new Error('Failed to save highlights');
-    //});
+    let highlightsStore: HighlightsModel<Highlight>|null = $state.raw(null);
+    let unsubscribe: () => boolean;
 
-    let contextMenu: ContextMenuProps | null = $state(null);
+    let setHighlightsModel = (highlights_array?: Array<Highlight>) => {
+        if (!highlights_array) highlights_array = testHighlights['https://arxiv.org/pdf/2203.11115'] ?? []
+        highlightsStore = new HighlightsModel(highlights_array);
+        /** subscribe to highlights model updates  */
+        unsubscribe = highlightsStore.subscribe((highlights)=>{
+            //save data to server...
+            console.log($state.snapshot(highlights));
+            if (true) return new Error('Failed to save highlights');
+        });
+    }
 
-    type tool = 'text_selection' | 'hand' | 'highlight_pen' | 'area_selection';
 
+    /** Scroll to highlight based on hash in the URL */
+    const parseIdFromHash = () => {
+      return document.location.hash.slice('#highlight-'.length);
+    };
+    const resetHash = () => {
+        document.location.hash = '';
+    };
+    const scrollToHighlightFromHash = () => {
+        let id = parseIdFromHash();
+        if (id.length < 1) return;
+        const highlight = highlightsStore.getHighlightById(id);
+        if (highlight && pdfHighlighterUtils.scrollToHighlight) {
+            pdfHighlighterUtils.scrollToHighlight(highlight);
+        }
+    };
 
-    let workerUrl: string | null = $state(null);
-     (async () => {
-         workerUrl = (await import("pdfjs-dist/build/pdf.worker?url")).default; //vite.dev/guide/assets.html#explicit-url-imports
-     })();
-    //workerUrl = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
-
-    onMount(() => {
-        const handleClick = () => {
-            if (contextMenu) {
-                contextMenu = null;
-            }
+    const PRIMARY_PDF_URL = "https://arxiv.org/pdf/2203.11115";
+    const SECONDARY_PDF_URL = "https://arxiv.org/pdf/1604.02480";
+    const toggleDocument = () => {
+        let pdf_url = (url === PRIMARY_PDF_URL) ? SECONDARY_PDF_URL : PRIMARY_PDF_URL;
+        pdfHighlighterUtils = {
+            textSelectionDelay: 1500,
+            selectedColor: colors[0],
+            colors: colors,
+            scrolledTo_color: scrolledTo_color,
         };
-        document.addEventListener('click', handleClick);
+        url = pdf_url;
+        setHighlightsModel(testHighlights[pdf_url]);
+        //highlightsStore = new HighlightsModel(_highlights);
+    };
 
-        return () => {
-            document.removeEventListener('click', handleClick);
-        };
-    });
-    //, [contextMenu]
 
+    /** Event handlers */
     const handleContextMenu = (
         event: MouseEvent,
         type: 'highlight' | 'document',
@@ -121,34 +139,37 @@
             };
         }
     };
+    const handleClick = () => {
+        if (contextMenu) {
+            contextMenu = null;
+        }
+    };
 
-    let sidebarScrollToId: (id: string) => void;
 
-    let pdfHighlighterUtils: Partial<TPdfHighlighterUtils> = $state({
-        textSelectionDelay: 1500,
-        selectedColor: colors[0],
+    onMount(() => {
+        pdfHighlighterUtils = {
+            textSelectionDelay: 1500,
+            //selectedColor: colors[0],
+            //colors: colors,
+            scrolledTo_color: scrolledTo_color,
+        }
+        setHighlightsModel();
+        const removeClickHandler = on(
+            document,
+            'click',
+            handleClick,
+        );
+        // const removeHashChangeHandler = on(
+        //     window,
+        //     'hashchange',
+        //     scrollToHighlightFromHash,
+        // );
+        return () => {
+            removeClickHandler();
+            //removeHashChangeHandler();
+        };
     });
 
-
-    // Scroll to highlight based on hash in the URL
-    /*const scrollToHighlightFromHash = () => {
-        //TODO
-        const highlight = highlightsStore.getHighlightById(parseIdFromHash());
-
-        if (highlight && pdfHighlighterUtils) {
-            pdfHighlighterUtils.scrollToHighlight(highlight);
-        }
-    };*/
-
-    // const setSelection = (selection) {
-    //  highlightPen ? (selection) =>  : undefined;
-    // }
-
-    let resetHash = '';
-    //console.log(url);
-
-    let highlightMixBlendMode = $state('normal');
-    let sidebarVisible = $state(true);
 </script>
 
 <style>
@@ -162,36 +183,38 @@
     :global(.PdfHighlighter) {
         background-color: #DEE2E6;
     }
-    :global(.TextHighlight--scrolledTo .TextHighlight__part) {
-        background: #b5b5b5 !important;
-    }
+    /*:global(.TextHighlight__part--scrolledTo) {
+        
+    }*/
 </style>
+
+{#key url}
+
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
+{#if (highlightsStore !== null)}
 <Toolbar  
-    searchInPdf = {pdfHighlighterUtils.search}
     bind:pdfHighlighterUtils = {pdfHighlighterUtils}
     bind:sidebarVisible
-    {colors}
 />
+{/if}
 <div class="App" style="display: flex; height: calc(100vh - 2.1rem);">
-    {#if (sidebarVisible)}
+    {#if (sidebarVisible && highlightsStore !== null)}
     <Sidebar
-        bind:highlights={highlightsStore.highlights}
+        highlights={highlightsStore.highlights}
         resetHighlights={highlightsStore.resetHighlights}
-        toggleDocument={()=>{}}
+        {toggleDocument}
         editHighlight = {highlightsStore.editHighlight}
         deleteHighlight = {highlightsStore.deleteHighlight}
         sidebarScrollToId = {(callback: (id: string) => void) => sidebarScrollToId = callback}
         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
-        {colors}
-        bind:highlightMixBlendMode
     /> 
     {/if}
     <div style="height: 100%; width: 100%; overflow: hidden; position: relative; flexGrow: 1">
         
 
-        {#if workerUrl !== null}         
+        {#if (workerUrl !== null && highlightsStore !== null && pdfHighlighterUtils !== null)}
+
             <PdfLoader document={url} workerSrc={workerUrl}>
 
                 <!-- Custom error and progress snippets (optional) -->
@@ -208,8 +231,11 @@
 
                 {#snippet pdfHighlighterWrapper(pdfDocumentRef)}
                     <PdfHighlighter
-                        bind:highlightsStore
+                        {highlightsStore}
                         pdfDocument={pdfDocumentRef}
+                        pdfViewerOptions = {{
+                            //annotationMode: 0,
+                        }}
                         style="height: 100%;"
                         onContextMenu={(e)=>handleContextMenu(e,'document',null)}
                         onHighlightContextMenu={(e, data)=>handleContextMenu(e,'highlight',data)}
@@ -217,8 +243,9 @@
                                 e.stopPropagation();
                                 sidebarScrollToId(data.id);
                             }}
-                        {highlightMixBlendMode}
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
+                        onScrollAway={resetHash}
+                        onHighlightsRendered={scrollToHighlightFromHash}
                     >
 
                         <!-- Custom highlight container (optional) -->
@@ -313,11 +340,12 @@
                     </PdfHighlighter>
                 {/snippet}
             </PdfLoader>
+            
         {/if}
     </div>
     {#if contextMenu} <ContextMenu {...contextMenu} /> {/if}
 </div>
-
+{/key}
 <!-- disable browser default search bar -->
 <svelte:window 
     onkeydown={

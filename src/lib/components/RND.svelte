@@ -1,11 +1,11 @@
 <script lang="ts">
     import { cssStringify } from '$lib/utils';
     import type { Debounced } from '$lib/utils';
-    import { getContext } from 'svelte';
+    //import { getContext } from 'svelte';
     import { on } from 'svelte/events';
     import type { ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils, LTWH, LTWHP } from '$lib/types';
 
-    const _color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+    const _color = pdfHighlighterUtils.colors ? pdfHighlighterUtils.colors[0] : 'yellow';
     let {
         boundingRect,
         onDragOrResizeStop,
@@ -144,7 +144,7 @@
         return () => {
         };
     });*/
-    const scrolledToColor = getContext('scrolledTo_color');
+    const scrolledToColor = pdfHighlighterUtils.scrolledTo_color;
 </script>
 
 <style>

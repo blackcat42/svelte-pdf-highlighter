@@ -7,8 +7,6 @@
         deleteHighlight: (highlight: Highlight) => void;
         sidebarScrollToId: any;
         pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
-        colors: Array<string>;
-        highlightMixBlendMode: string;
     }
 </script>
 
@@ -21,16 +19,16 @@
     };
 
     let {
-        highlights = $bindable(),
+        highlights,
         toggleDocument,
         resetHighlights,
         editHighlight,
         deleteHighlight,
         sidebarScrollToId,
         pdfHighlighterUtils = $bindable(),
-        colors,
-        highlightMixBlendMode = $bindable(),
     }: SidebarProps = $props();
+
+    let colors = $derived(pdfHighlighterUtils.colors ? pdfHighlighterUtils.colors : ['transparent']);
 
     sidebarScrollToId((id) => {
         let element = document.getElementById(id);
@@ -284,7 +282,7 @@
         <br>
         <small>Highlight's mix-blend-mode: </small> <br>
         <select
-            bind:value={highlightMixBlendMode}
+            bind:value={pdfHighlighterUtils.highlightMixBlendMode}
         > 
             <option value="normal">
                 normal
@@ -305,7 +303,7 @@
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <li id={highlight.id} class="sidebar__highlight" >
-                    <div style = "background: {highlight.color ? highlight.color : '#fcf151'};" class="sidebar__highlight-wrapper">
+                    <div style = "background: {highlight.color ? highlight.color : colors[0]};" class="sidebar__highlight-wrapper">
                         <div style = "
                             background: transparent; 
                             width: 100%; 
@@ -333,7 +331,7 @@
                                     onchange={(e)=>editHighlight(highlight.id, {color: (e.target as HTMLInputElement).value})}
                                     style="background: {highlight.color}"
                                 >
-                                    {#each colors as color}
+                                    {#each pdfHighlighterUtils.colors as color}
                                         <option 
                                             value={color}
                                             style ="background: {color}; height: 10px; width: 20px;"
@@ -347,7 +345,12 @@
                         <div style = "background: #fff; border-top: 1px solid #f8f9fa; height: {(highlight?.comment?.length > 3) ? '80px' : '50px'};"><textarea value = {highlight.comment} placeholder="empty comment" onchange={(e)=>editHighlight(highlight.id, {comment: (e.target as HTMLInputElement).value})}></textarea></div>
                         <div style = "background: #f8f9fa; border-top: 1px solid #ddd;">
                             {#if highlight.content.text}
-                                <blockquote style="margin: 0.3rem" onclick={()=>{pdfHighlighterUtils.scrollToHighlight(highlight)}}>
+                                <blockquote style="margin: 0.3rem" onclick={
+                                        () => {
+                                            document.location.hash = '#highlight-'+highlight.id;
+                                            pdfHighlighterUtils.scrollToHighlight(highlight)
+                                        }
+                                    }>
                                         {highlight.content.text.slice(0, 90).trim()}…
                                 </blockquote>
                             {/if}
@@ -357,7 +360,12 @@
                                 <div
                                     class="highlight__image__container"
                                     style="marginTop: 0.5rem"
-                                    onclick={()=>{pdfHighlighterUtils.scrollToHighlight(highlight)}}
+                                    onclick={
+                                        () => {
+                                            document.location.hash = '#highlight-'+highlight.id;
+                                            pdfHighlighterUtils.scrollToHighlight(highlight)
+                                        }
+                                    }
                                 >
                                     <img
                                         src={highlight.content.image}
@@ -376,7 +384,7 @@
     {/if}
 
     <div style="padding: 0.5rem">
-        <button onclick={()=>{}} class="sidebar__toggle">
+        <button onclick={toggleDocument} class="sidebar__toggle">
             Toggle PDF document
         </button>
     </div>

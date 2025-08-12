@@ -35,7 +35,8 @@ export class HighlightsModel<T extends Highlight> {
     public addHighlight = (highlight: T) => {
         console.log('Saving highlight', highlight);
         let id = this.getNextId();
-        this.highlights.push({ ...highlight, id: id });
+        this.highlights = [...this.highlights, { ...highlight, id: id }];
+        //this.highlights.push({ ...highlight, id: id });
         return this.getHighlightById(id);
     };
 

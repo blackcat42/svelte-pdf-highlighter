@@ -61,7 +61,7 @@
     import { debounce } from "$lib/utils";
     import RND from '$lib/components/RND.svelte';
     import type { LTWHP, LTWH, ViewportHighlight, PdfHighlighterUtils as TPdfHighlighterUtils } from '$lib/types';
-    import { getContext } from 'svelte';
+    //import { getContext } from 'svelte';
 
     /**
      * The props type for {@link AreaHighlight}.
@@ -91,13 +91,13 @@
     if (highlight.color) {
         color = highlight.color
     } else {
-        color = getContext('colors') ? getContext('colors')[0] : 'yellow';
+        color = pdfHighlighterUtils.colors ? pdfHighlighterUtils.colors[0] : 'yellow';
     }
 
     let isAllowTextSelection = $state(false);
-    let delay = pdfHighlighterUtils.textSelectionDelay;
+    //let delay = pdfHighlighterUtils.textSelectionDelay;
     const allowTextSelection = debounce(() => {
-        if (delay < 0) return;
+        if (pdfHighlighterUtils.textSelectionDelay < 0) return;
         isAllowTextSelection = true;
     }, () => pdfHighlighterUtils.textSelectionDelay);
 </script>

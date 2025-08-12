@@ -12,6 +12,7 @@
     export interface pdfHighlighterProps {
         highlightsStore: HighlightsModel<any>;
         pdfDocument: PDFDocumentProxy;
+        pdfViewerOptions?: Partial<PDFViewerOptions>;
         highlightPopup?: Snippet;
         editHighlightPopup?: Snippet;
         newHighlightPopup?: Snippet;
@@ -23,12 +24,20 @@
             highlight: ViewportHighlight<CommentedHighlight>,
         ) => void;
         onHighlightClick?: any;
-        highlightMixBlendMode?: string;
         pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
+
+        /**
+         * Event is called only once whenever the user changes scroll after
+         * the autoscroll function, scrollToHighlight, has been called.
+         */
+        onScrollAway?(): void;
+        onHighlightsRendered?(): void;
+        //scrolledTo_color: string;
     }
 </script>
 
 <script lang="ts">
+    //TODO: refactor pdfHighlighterUtils
     import 'pdfjs-dist/web/pdf_viewer.css';
     import '$lib/style/pdf_viewer.css';
 
@@ -70,6 +79,7 @@
         PDFFindController as TPDFFindController,
     } from 'pdfjs-dist/web/pdf_viewer.mjs';
     import { debounce } from '$lib/utils';
+    import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
 
     type PointerEventHandler = (event?: PointerEvent & { currentTarget: EventTarget & HTMLElement }) => void;
     let pdfViewerReady = false;
@@ -99,8 +109,9 @@
     };
 
     let {
-        highlightsStore = $bindable(),
+        highlightsStore,
         pdfDocument,
+        pdfViewerOptions = {},
         highlightContainer = defaultHighlightContainer,
         highlightPopup,
         editHighlightPopup,
@@ -109,9 +120,13 @@
         onContextMenu,
         onHighlightContextMenu,
         onHighlightClick,
-        highlightMixBlendMode,
         pdfHighlighterUtils = $bindable(),
+        onScrollAway,
+        onHighlightsRendered,
     }: pdfHighlighterProps = $props();
+
+    //setContext('colors', colors);
+    //setContext('scrolledTo_color', scrolledTo_color);
 
     let enableAreaSelection = $derived(pdfHighlighterUtils.selectedTool === 'area_selection');
     //let addGhostHighlight = highlightsStore.addGhostHighlight;
@@ -134,7 +149,7 @@
 
     let linkServiceRef: InstanceType<typeof PDFLinkService>;
     let resizeObserverRef: ResizeObserver | null = null;
-    let viewerRef: InstanceType<typeof PDFViewer> | null = null;
+    let viewerRef: InstanceType<typeof PDFViewer> | null = $state.raw(null);
     let findController_instance: TPDFFindController;
 
     const defaultSearchOptions: SearchOptions = {
@@ -163,14 +178,13 @@
         }
     };
 
-    let removeKeyDownHandlers;
-    let removeWheelHandler;
+    let removeKeyDownHandlers: () => void;
+    let removeWheelHandler: () => void;
     // Initialise PDF Viewer
     onMount(() => {
         console.log('PdfHighliter mount');
 
         if (!containerNodeRef) return;
-        pdfHighlighterUtils.search = search;
 
         //TODO: debounce
         let doc_init = setInterval(() => {
@@ -191,14 +205,17 @@
             const debouncedDocumentInit = (viewerRef =
                 viewerRef ||
                 new PDFViewer({
-                    container: containerNodeRef!,
-                    eventBus: eventBusRef,
-                    textLayerMode: 1,
-                    removePageBorders: true,
-                    linkService: linkServiceRef,
-                    findController: findController_instance,
-                    annotationMode: 1,
-                    enableHWA: false,
+                    ...{
+                        container: containerNodeRef!,
+                        eventBus: eventBusRef,
+                        textLayerMode: 1,
+                        removePageBorders: true,
+                        linkService: linkServiceRef,
+                        findController: findController_instance,
+                        annotationMode: 1,
+                        enableHWA: false,
+                    },
+                    ...pdfViewerOptions
                 }));
 
             viewerRef.setDocument(pdfDocument as any);
@@ -223,16 +240,16 @@
 
 
             let getMatchesCount = debounce(() => {
-                pdfHighlighterUtils.setSearchState({
+                pdfHighlighterUtils.searchState = {
                     matchesCount: {
                         current: (findController_instance._matchesCountTotal > 0) ? 1 : 0, 
                         total: findController_instance._matchesCountTotal,
                     }
-                });
+                };
             }, 300);
 
             eventBusRef.on('updatefindcontrolstate', (data)=>{
-                pdfHighlighterUtils.setSearchState(data);
+                pdfHighlighterUtils.searchState = data;
                 if (data.matchesCount.total === 0) {
                     getMatchesCount();
                 }
@@ -279,7 +296,7 @@
                         //phraseSearch: true,
                         findPrevious: false,
                     };
-                    search(options);
+                    pdfHighlighterUtils.search(options);
                 }
             });
 
@@ -332,6 +349,7 @@
     let isDragging_MouseDown = $state(false);
     let isSelectionInProgress = $state(false);
     const handleScroll = () => {
+        onScrollAway && onScrollAway();
         pdfHighlighterUtils.scrolledToHighlightIdRef = null;
     };
 
@@ -525,6 +543,7 @@
                 }
             }
         }
+        onHighlightsRendered && onHighlightsRendered();
     };
 
     // Utils
@@ -538,6 +557,9 @@
     };
 
     pdfHighlighterUtils = {...{
+        search: search,
+        searchState: {matchesCount: {current: 0, total: 0}},
+
         scrollToHighlight: function(highlight: Highlight) {
             const { boundingRect, usePdfCoordinates } = highlight.position;
             const pageNumber = boundingRect.pageNumber;
@@ -571,24 +593,24 @@
                 this.scrolledToHighlightIdRef = '';
             }, 500);
         },
+        scrolledToHighlightIdRef: '',
         //getCurrentSelection: () => selectionRef,
         isSelectionInProgress: () => isSelectionInProgress,
-
-        //scrollToHighlight,
-        scrolledToHighlightIdRef: '',
         //getViewer: () => viewerRef,
         //getTip: () => tip,
+
         currentScale: 1,
         currentScaleValue: 1,
-        setCurrentScaleValue: (value: PdfScaleValue) => {
+        setCurrentScaleValue: function(value: PdfScaleValue) {
             if (typeof value === 'string') {
-                pdfHighlighterUtils.currentScaleValue = value;
+                this.currentScaleValue = value;
             } else if (value < 3 && value >= 0) {
-                pdfHighlighterUtils.currentScaleValue = parseFloat(value.toFixed(1));
+                this.currentScaleValue = parseFloat(value.toFixed(1));
             }
 
-            pdfHighlighterUtils.setTip(null);
+            this.setTip(null);
         },
+
         setCurrentHighlightId: (hl) => {
             currentHlId = hl;
         },
@@ -597,14 +619,14 @@
         },
 
         textSelectionDelay: 1500,
-
         selectedTool: 'text_selection',
-        selectedColor: 'red',
+        selectedColor: 'gold',
+        colors: ['gold', 'yellowgreen', 'seagreen', 'blueviolet'],
+        scrolledTo_color: 'red',
+        highlightMixBlendMode: 'normal',
+        
         setTip: () => {},
-        searchState: {matchesCount: {current: 0, total: 0}},
-        setSearchState: (state) => {pdfHighlighterUtils.searchState = state;},
-        getSearchState: () => {return pdfHighlighterUtils.searchState},
-            
+
         pageLayout: {spreadMode: 0, scrollMode: 0},
         setPageLayout: (opts) => {
             if (opts.spreadMode !== undefined) viewerRef.spreadMode = opts.spreadMode;
@@ -615,13 +637,11 @@
     }, ...pdfHighlighterUtils } as TPdfHighlighterUtils;
 
 
-    const colors: string[] = getContext('colors') || ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'];
+    //const colors: string[] = getContext('colors') || ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'];
 
     let derived_style = $derived.by(() => {
         if (pdfHighlighterUtils.selectedTool == 'hand') {
             return 'cursor: grab;' + style;
-        } else if (pdfHighlighterUtils.selectedTool == 'pen') {
-            return 'cursor: grab !important;' + style;
         } else {
             return style;
         }
@@ -733,7 +753,6 @@
 
 {#snippet defaultHighlightContainer()}
     <HighlightContainer
-        {highlightMixBlendMode}
         editHighlight = {highlightsStore.editHighlight}
         onContextMenu={onHighlightContextMenu}
         onClick = {onHighlightClick}
@@ -780,9 +799,9 @@
     {#if isViewerReady}
         <TipContainer 
             {clearTextSelection} 
-            onTipUpdate = {(tipUpdater) => pdfHighlighterUtils.setTip = tipUpdater} 
+            onTipUpdate = {(tipUpdater: (f: any) => any) => pdfHighlighterUtils.setTip = tipUpdater} 
             viewer={viewerRef!}
-            colors={colors} 
+            colors={pdfHighlighterUtils.colors} 
             {highlightsStore}
             {highlightPopup}
             {editHighlightPopup}

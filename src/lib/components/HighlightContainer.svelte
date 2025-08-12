@@ -53,7 +53,7 @@
                 }
             }
             {pdfHighlighterUtils}
-            {highlightMixBlendMode}
+            highlightMixBlendMode = {pdfHighlighterUtils.highlightMixBlendMode}
         />
     {:else}
         <AreaHighlight
@@ -79,7 +79,7 @@
                 onClick && onClick(event, highlight)
             }
             {pdfHighlighterUtils}
-            {highlightMixBlendMode}
+             highlightMixBlendMode = {pdfHighlighterUtils.highlightMixBlendMode}
             isDraggable = {false}
         />
     {/if}

@@ -216,26 +216,31 @@ type SearchState = {
 
 export type PdfHighlighterUtils = {
     isSelectionInProgress(): boolean;
+
     scrollToHighlight(highlight: Highlight): void;
     scrolledToHighlightIdRef?: string|null;
-    /** Represents scale as a number */
-    currentScale: number;
+
+    currentScale: number; //Represents scale as a number
     currentScaleValue: string|number;
     setCurrentScaleValue(value: PdfScaleValue): void;
+
     setCurrentHighlightId(highlight_id: string): void;
     setCurrentHighlightZIndex(index: number): void;
 
     setTip(f: any): any;
 
-    selectedTool: string;
+    selectedTool: 'text_selection' | 'hand' | 'highlight_pen' | 'area_selection';
     selectedColor: string;
-    search: any;
+    colors: string[];
+    scrolledTo_color: string;
+    highlightMixBlendMode: string;
 
+    search: (options: SearchOptions) => void;
     searchState: SearchState;
-    setSearchState: (state: SearchState) => void;
-    getSearchState: () => SearchState;
+
     pageLayout: PageLayout;
     setPageLayout: (opts: PageLayout) => void;
+
     textSelectionDelay: number;
 };
 

@@ -85,6 +85,10 @@
         shouldBeHidden = true;
     };
     
+    const clearTip = () => {
+        hideTip(null, true);
+        tipContainerState = { show: false };
+    }
 
     const updateTip = (_tipContainerState) => {
         if (_tipContainerState === null) {
@@ -147,6 +151,7 @@
     let commentForceShow = $state(false)
     const showComment = debounce(()=>commentForceShow = true, 1000);
     
+    let selected_id_to_del = $state('');
 </script>
 
 <style type="text/css">
@@ -225,7 +230,7 @@
     :global(.TipButton) {
         display: flex;
         align-items: center;
-         border: 0px solid;
+        border: 0px solid;
         border-radius: 5px;
         width: 1.7rem;
         height: 1.7rem;
@@ -246,6 +251,23 @@
         /*        transform: scale(1.05);*/
         background-color: #E9ECEF;
     }
+
+    .tip__delete-confirm,
+    .tip__delete-cancel {
+        border: none;
+        cursor: pointer;
+        background: none;
+        color: #555;
+        border: 0px solid;
+        border-radius: 5px;
+        padding: 5px;
+        width: 1.5rem;
+    }
+    .tip__delete-confirm:hover,
+    .tip__delete-cancel:hover {
+        color: #000;
+        background: #E9ECEF;
+    }
 </style>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -255,12 +277,12 @@
     <!-- TODO: expand on hover with delay -->
     <div class="Highlight__popup" style="display: flex; align-items: center;" onmouseleave={()=>{showComment.cancel(); commentForceShow = false;}}>
     {#if hl.comment }
-        <div style="margin: 5px; white-space: nowrap;" onmouseenter={showComment} > 
+        <div style="margin: 5px;" onmouseenter={showComment} > 
             {#if hl.comment.length > 20 && commentForceShow}
-                <div style="max-height: 150px; overflow-y: scroll;">{hl.comment}</div>
+                <div style="height: 5rem; width: 150px; text-align: left; overflow-y: scroll;">{hl.comment}</div>
             {:else if hl.comment.length > 20 && !commentForceShow}
-                <span style="mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0));">
-                {hl.comment.slice(0, 21) + '...'}</span>
+                <div style="max-width: 150px; white-space: nowrap;"><span style="mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0));">
+                {hl.comment.slice(0, 21) + '...'}</span></div>
             {:else}
                 {hl.comment}
             {/if}        
@@ -300,7 +322,7 @@
             <button 
                 class="color" 
                 onclick={()=>setColor(color)} 
-                style="background-color: {color}" 
+                style="background-color: {color}; border: {(highlight.color===color) ? '1px solid grey' : 'none'};" 
                 onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
                 onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}} >  
             </button>
@@ -308,13 +330,24 @@
         </div>
         <!-- TODO: add custom color/colorpicker? -->
 
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button style="margin-left: auto;" class="TipButton"
-                onclick={() => onDelete(highlight)}
+
+
+        {#if (selected_id_to_del == highlight.id)}
+            <div style="float:right; margin-left: 1rem;">
+                <span style="font-size: small;">delete this highlight?</span>
+                <!-- svelte-ignore a11y_consider_explicit_label -->
+                <button class="tip__delete-confirm" onclick="{()=>{onDelete(highlight); selected_id_to_del = ''; clearTip();}}">&#x2713;</button>
+                <button class="tip__delete-cancel" onclick="{()=>{selected_id_to_del = ''}}">&#x2715;</button>
+            </div>
+        {:else}
+            <!-- svelte-ignore a11y_consider_explicit_label -->
+            <button style="margin-left: auto;" class="TipButton"
+                onclick="{()=>selected_id_to_del = highlight.id}"
             ><div style="height: 1.2rem; width: 1.2rem;" class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><!--Lucide - https://lucide.dev License - https://lucide.dev/license Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.--></svg>
-            </div>
-        </button>
+            </div></button>
+        {/if}
+        
     </div>
     </div>
 {/snippet}

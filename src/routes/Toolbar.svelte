@@ -5,17 +5,13 @@
         PdfHighlighterUtils as TPdfHighlighterUtils,
     } from '$lib/types.ts';
     interface ToolbarProps {
-        searchInPdf: any;
         pdfHighlighterUtils: Partial<TPdfHighlighterUtils>;
         sidebarVisible: boolean;
-        colors: Array<string>;
     }
 
     let {
         sidebarVisible = $bindable(),
-        searchInPdf,
         pdfHighlighterUtils = $bindable(),
-        colors,
     }: ToolbarProps = $props();
 
     const zoomIn = () => {
@@ -56,7 +52,7 @@
     //let rrr = $derived(pdfHighlighterUtils._searchState.matchesCount.total);
     let searchState = $state.raw({});
     let updateSearchState = debounce(() => {
-        let _searchState = pdfHighlighterUtils.getSearchState();
+        let _searchState = pdfHighlighterUtils.searchState;
         //searchState = {current: _searchState.matchesCount.current, total: _searchState.source['_matchesCountTotal']};
         searchState = _searchState.matchesCount;
     }, 100);
@@ -64,7 +60,7 @@
         if (!opts && searchOptions.query === prevQuery) return;
         searchOptions = { ...searchOptions, ...opts };
         prevQuery = searchOptions.query;
-        searchInPdf(searchOptions);
+        pdfHighlighterUtils.search(searchOptions);
         updateSearchState(); //TODO: move to props, refactor
     };
 
@@ -318,7 +314,7 @@
                                     onchange={(e) => pdfHighlighterUtils.selectedColor = (e.target as HTMLInputElement).value}
                                     style="background: {pdfHighlighterUtils.selectedColor}"
                                 >
-                                    {#each colors as color}
+                                    {#each pdfHighlighterUtils.colors as color}
                                         <option 
                                             value={color}
                                             style ="background: {color}; height: 10px; width: 20px;"
