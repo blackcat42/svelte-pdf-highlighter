@@ -32,7 +32,7 @@
          */
         onScrollAway?(): void;
         onHighlightsRendered?(): void;
-        //scrolledTo_color: string;
+        scaleOnResize?: boolean;
     }
 </script>
 
@@ -123,6 +123,7 @@
         pdfHighlighterUtils = $bindable(),
         onScrollAway,
         onHighlightsRendered,
+        scaleOnResize = false,
     }: pdfHighlighterProps = $props();
 
     //setContext('colors', colors);
@@ -222,9 +223,11 @@
             linkServiceRef.setDocument(pdfDocument);
             linkServiceRef.setViewer(viewerRef);
             
-
-            resizeObserverRef = new ResizeObserver(handleScaleValue);
-            resizeObserverRef.observe(containerNodeRef);
+            if (scaleOnResize) {
+                resizeObserverRef = new ResizeObserver(()=>handleScaleValue('auto'));
+                resizeObserverRef.observe(containerNodeRef);
+            }
+            
 
             //doc = containerNodeRef.ownerDocument;
             eventBusRef.on('textlayerrendered', () => {
@@ -263,7 +266,13 @@
             });
             eventBusRef.on('scalechanging', (data: { scale: number, presetValue: string|undefined, }) =>
             {
-                //{scale: 1.1, presetValue: "page-width"}
+                pdfHighlighterUtils.currentScale = data.scale;
+                if (typeof data.presetValue !== 'undefined') {
+                    pdfHighlighterUtils.currentScaleValue = data.presetValue as PdfScaleValue;
+                } else {
+                    pdfHighlighterUtils.currentScaleValue = data.scale;
+                }
+                
             });
             eventBusRef.on('spreadmodechanged', (data: {mode: number})=>{
                 if (!pdfHighlighterUtils.pageLayout) return;
@@ -335,13 +344,9 @@
     });
     //, [document]
 
-    $effect(() => {
+    /*$effect(() => {
         console.log('PdfHighlighter effect run');
-        if (!isViewerReady) return;
-        if (!containerNodeRef) return;
-        pdfHighlighterUtils.currentScaleValue; //dependence
-        handleScaleValue();
-    });
+    });*/
 
     // Event listeners
     //const handleWheelScale =
@@ -485,10 +490,11 @@
         }
     };
 
-    const handleScaleValue = () => {
-        if (viewerRef && isViewerReady && typeof pdfHighlighterUtils.currentScaleValue !== 'undefined') {
-            viewerRef.currentScaleValue = pdfHighlighterUtils.currentScaleValue.toString();
-            pdfHighlighterUtils.currentScale = viewerRef.currentScale;
+    const handleScaleValue = (value: PdfScaleValue = pdfHighlighterUtils.currentScaleValue) => {
+        //console.log('handleScaleValue:'+value)
+        if (typeof value !== 'string' && typeof value !== 'number') return;
+        if (viewerRef && isViewerReady && typeof value !== 'undefined') {
+            viewerRef.currentScaleValue = value.toString();
         }
     };
 
@@ -603,11 +609,10 @@
         currentScaleValue: 1,
         setCurrentScaleValue: function(value: PdfScaleValue) {
             if (typeof value === 'string') {
-                this.currentScaleValue = value;
+                handleScaleValue(value);
             } else if (value < 3 && value >= 0) {
-                this.currentScaleValue = parseFloat(value.toFixed(1));
+                handleScaleValue(value.toFixed(1) as PdfScaleValue);
             }
-
             this.setTip(null);
         },
 

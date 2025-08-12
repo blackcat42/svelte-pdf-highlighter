@@ -207,7 +207,7 @@ export type SearchOptions = {
 type PageLayout = {
     spreadMode?: number; 
     scrollMode?: number; 
-    pagesRotation?: number;
+    pagesRotation?: 0 | 90 | 180 | 270;
 }
 
 type SearchState = {
@@ -221,7 +221,7 @@ export type PdfHighlighterUtils = {
     scrolledToHighlightIdRef?: string|null;
 
     currentScale: number; //Represents scale as a number
-    currentScaleValue: string|number;
+    currentScaleValue: PdfScaleValue;
     setCurrentScaleValue(value: PdfScaleValue): void;
 
     setCurrentHighlightId(highlight_id: string): void;

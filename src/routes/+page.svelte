@@ -152,6 +152,7 @@
             //selectedColor: colors[0],
             //colors: colors,
             scrolledTo_color: scrolledTo_color,
+            currentScaleValue: 1,
         }
         setHighlightsModel();
         const removeClickHandler = on(
@@ -246,6 +247,7 @@
                         bind:pdfHighlighterUtils = {pdfHighlighterUtils}
                         onScrollAway={resetHash}
                         onHighlightsRendered={scrollToHighlightFromHash}
+                        scaleOnResize={false}
                     >
 
                         <!-- Custom highlight container (optional) -->
