@@ -14,6 +14,8 @@
         pdfHighlighterUtils = $bindable(),
     }: ToolbarProps = $props();
 
+    let colors = $state(pdfHighlighterUtils.colors);
+
     const zoomIn = () => {
         if (pdfHighlighterUtils.currentScale > 0) {
             if (pdfHighlighterUtils.currentScale < 4) {
@@ -308,15 +310,16 @@
                 <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z"/><path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><!--Lucide - https://lucide.dev License - https://lucide.dev/license Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.--></svg></div>
             </button>
 
+            {#if (pdfHighlighterUtils.colors)}
             <div class="toolbar__color_select">
                                 <select
-                                    value={pdfHighlighterUtils.selectedColor}
-                                    onchange={(e) => pdfHighlighterUtils.selectedColor = (e.target as HTMLInputElement).value}
-                                    style="background: {pdfHighlighterUtils.selectedColor}"
+                                    value={pdfHighlighterUtils.selectedColorIndex}
+                                    onchange={(e) => pdfHighlighterUtils.selectedColorIndex = parseInt((e.target as HTMLInputElement).value)}
+                                    style="background: {pdfHighlighterUtils.colors[pdfHighlighterUtils.selectedColorIndex]}"
                                 >
-                                    {#each pdfHighlighterUtils.colors as color}
+                                    {#each pdfHighlighterUtils.colors as color, index}
                                         <option 
-                                            value={color}
+                                            value={index}
                                             style ="background: {color}; height: 10px; width: 20px;"
                                         >
                                             &nbsp;
@@ -324,6 +327,7 @@
                                     {/each}
                                 </select>
             </div>
+            {/if}
             
         </div>
 

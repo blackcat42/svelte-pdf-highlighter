@@ -86,7 +86,7 @@
         let pdf_url = (url === PRIMARY_PDF_URL) ? SECONDARY_PDF_URL : PRIMARY_PDF_URL;
         pdfHighlighterUtils = {
             textSelectionDelay: 1500,
-            selectedColor: colors[0],
+            selectedColorIndex: 0,
             colors: colors,
             scrolledTo_color: scrolledTo_color,
         };
@@ -149,8 +149,8 @@
     onMount(() => {
         pdfHighlighterUtils = {
             textSelectionDelay: 1500,
-            //selectedColor: colors[0],
-            //colors: colors,
+            selectedColorIndex: 0,
+            colors: colors,
             scrolledTo_color: scrolledTo_color,
             currentScaleValue: 1,
         }

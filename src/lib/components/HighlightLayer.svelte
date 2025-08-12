@@ -186,7 +186,7 @@
     }
 </style>
 
-{#key pdfHighlighterUtils.currentScale}
+{#key pdfHighlighterUtils.colors}
 <div>
     {#each getCurrentHighlightsInOrder(a_currentHighlights) as highlightUtils (highlightUtils.highlight.id)}
 

@@ -143,9 +143,9 @@
         //clampedLeft = clamp(left - width / 2, 0, pageLeft + pageWidth - width);      
     };
 
-    const setColor = (color) => {
-        highlight.color = color;
-        highlightsStore.editHighlight(highlight.id, { color: color });
+    const setColor = (color_index) => {
+        highlight.color_index = color_index;
+        highlightsStore.editHighlight(highlight.id, { color_index: color_index });
     };
 
     let commentForceShow = $state(false)
@@ -317,11 +317,11 @@
         <!--<button onclick={()=>{highlightsStore.editHighlight(highlight.id)}}>edit</button>-->
         <div style="display: inline-flex; align-items: center; justify-content: center; width: 100%;">
         <div style="margin-left: auto;">
-        {#each colors as color}
+        {#each colors as color, index}
             <!-- svelte-ignore a11y_consider_explicit_label -->
             <button 
                 class="color" 
-                onclick={()=>setColor(color)} 
+                onclick={()=>setColor(index)} 
                 style="background-color: {color}; border: {(highlight.color===color) ? '1px solid grey' : 'none'};" 
                 onpointerdown={(e) => {e.preventDefault(); e.stopPropagation();}}
                 onpointerup={(e) => {e.preventDefault(); e.stopPropagation();}} >  
@@ -354,14 +354,14 @@
 
 {#snippet defaultNewHighlightPopup(highlight, colors, onAddHighlight)}
     <div class="Highlight__popup">
-            {#each colors as color}
+            {#each colors as color, index}
                 <!-- svelte-ignore a11y_consider_explicit_label -->
                 <button 
                     class="color"  
                     onclick={
                         (e) => {
                             if (!highlight.id) {
-                                highlight.color = color;
+                                highlight.color_index = index;
                                 onAddHighlight(highlight);
                             }
                         }

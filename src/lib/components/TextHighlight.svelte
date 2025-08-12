@@ -78,8 +78,13 @@
 
     let color: string = $state('');
     const scrolledToColor = pdfHighlighterUtils.scrolledTo_color;
-    if (highlight.color) {
-        color = highlight.color
+    if (highlight.color_index) {
+        let _color = pdfHighlighterUtils.colors[highlight.color_index];
+        if (_color !== undefined) {
+            color = pdfHighlighterUtils.colors[highlight.color_index];
+        } else {
+            color = 'lightgrey';
+        }
     } else {
         color = pdfHighlighterUtils.colors ? pdfHighlighterUtils.colors[0] : 'yellow';
     }

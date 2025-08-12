@@ -431,7 +431,7 @@
             pdfHighlighterUtils.setTip(tipContainerState);
             //addGhostHighlight(selectionRef);
         } else {
-            selectionRef.color = pdfHighlighterUtils.selectedColor;
+            selectionRef.color_index = pdfHighlighterUtils.selectedColorIndex;
             highlightsStore.addHighlight(selectionRef);
             clearTextSelection();
         }
@@ -625,7 +625,7 @@
 
         textSelectionDelay: 1500,
         selectedTool: 'text_selection',
-        selectedColor: 'gold',
+        selectedColorIndex: 0,
         colors: ['gold', 'yellowgreen', 'seagreen', 'blueviolet'],
         scrolledTo_color: 'red',
         highlightMixBlendMode: 'normal',
@@ -835,7 +835,7 @@
                     content: { image },
                     type: "area",
                     position: scaledPosition,
-                    color: pdfHighlighterUtils.selectedColor,
+                    color_index: pdfHighlighterUtils.selectedColorIndex,
                     };
                 highlightsStore.addHighlight(selectionRef);
                 //onAreaSelectionFin();

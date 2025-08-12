@@ -109,7 +109,7 @@ export interface Highlight {
     position?: ScaledPosition;
     comment?: string;
     is_temp?: boolean;
-    color?: string;
+    color_index?: number;
     z_index?: number,
     parent_hl_id?: string;
 }
@@ -230,7 +230,7 @@ export type PdfHighlighterUtils = {
     setTip(f: any): any;
 
     selectedTool: 'text_selection' | 'hand' | 'highlight_pen' | 'area_selection';
-    selectedColor: string;
+    selectedColorIndex: number;
     colors: string[];
     scrolledTo_color: string;
     highlightMixBlendMode: string;

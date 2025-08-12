@@ -40,6 +40,18 @@
 
     $effect(() => {});
     let selected_id_to_del = $state('');
+
+    const color_schemes = [
+        ['#fcf151', '#ff659f', '#83f18d', '#67dfff', '#b581fe'],
+        ['gold', 'yellowgreen', 'seagreen', 'blueviolet'],
+        ['red', 'green', 'blue'],
+    ];
+    let color_scheme_index = 0;
+    const changeColorScheme = () => {
+        color_scheme_index++;
+        if (color_scheme_index > 2) color_scheme_index = 0;
+        pdfHighlighterUtils.colors = color_schemes[color_scheme_index];
+    }
 </script>
 
 <style>
@@ -154,12 +166,12 @@
     .sidebar__reset {
         display: inline-block;
         padding: 0.5rem 1rem;
-        font-size: 1rem;
+        font-size: 0.8rem;
         font-weight: 500;
-        line-height: 1.75;
+        /*line-height: 1.75;*/
         text-align: center;
         text-decoration: none;
-        white-space: nowrap;
+        /*white-space: nowrap;*/
         border: 1px solid #2196f3;
         background-color: #2196f3;
         color: #fff;
@@ -303,7 +315,7 @@
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <li id={highlight.id} class="sidebar__highlight" >
-                    <div style = "background: {highlight.color ? highlight.color : colors[0]};" class="sidebar__highlight-wrapper">
+                    <div style = "background: {highlight.color_index ? colors[highlight.color_index] : colors[0]};" class="sidebar__highlight-wrapper">
                         <div style = "
                             background: transparent; 
                             width: 100%; 
@@ -327,13 +339,13 @@
                             {/if}
                             <div class="sidebar__color_select">
                                 <select
-                                    value={highlight.color}
-                                    onchange={(e)=>editHighlight(highlight.id, {color: (e.target as HTMLInputElement).value})}
-                                    style="background: {highlight.color}"
+                                    value={highlight.color_index}
+                                    onchange={(e)=>editHighlight(highlight.id, {color_index: parseInt((e.target as HTMLInputElement).value)})}
+                                    style="background: {colors[highlight.color_index]}"
                                 >
-                                    {#each pdfHighlighterUtils.colors as color}
+                                    {#each pdfHighlighterUtils.colors as color, index}
                                         <option 
-                                            value={color}
+                                            value={index}
                                             style ="background: {color}; height: 10px; width: 20px;"
                                         >
                                             &nbsp;
@@ -386,6 +398,11 @@
     <div style="padding: 0.5rem">
         <button onclick={toggleDocument} class="sidebar__toggle">
             Toggle PDF document
+        </button>
+    </div>
+    <div style="padding: 0.5rem">
+        <button onclick={changeColorScheme} class="sidebar__toggle">
+            Change color scheme for highlighting
         </button>
     </div>
 
